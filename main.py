@@ -6,6 +6,7 @@ Web-compatible with pygbag
 import pygame
 import asyncio
 import random
+import math
 
 # Initialize Pygame
 pygame.init()
@@ -15,22 +16,175 @@ WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
 FPS = 60
 PLAYER_MAX_HEALTH = 3
+RUN_MULTIPLIER = 1.45
+DASH_SPEED = 14
+DASH_DURATION = 14
+DASH_COOLDOWN = 48
+DASH_GRAVITY_SCALE = 0.25
+RUN_DUST_COOLDOWN = 5
 
-# Colors - Natural tones
-BLACK = (26, 26, 26)
-DARK_GRAY = (42, 42, 42)
-GRAY = (85, 85, 85)
-LIGHT_GRAY = (119, 119, 119)
-GREEN = (34, 139, 34)  # Forest green for player
-RED = (255, 107, 107)
-WHITE = (255, 255, 255)
-BLUE = (135, 206, 235)  # Sky blue background (more natural)
-BROWN = (139, 90, 43)  # Brown for platforms (wood/earth)
-EARTH = (101, 67, 33)  # Earth brown for ground
-STONE = (105, 105, 105)  # Stone gray for platform borders
+# Colors tuned toward a Hollow Knight inspired palette
+WHITE = (245, 246, 255)
+INK_BLACK = (8, 9, 16)
+MIDNIGHT_BLUE = (14, 21, 33)
+DEEP_NAVY = (19, 32, 53)
+ABYSS_TEAL = (36, 57, 78)
+MIST_BLUE = (78, 101, 128)
+PALE_GLOW = (211, 234, 255)
+ACCENT_CYAN = (130, 206, 255)
+SOFT_PURPLE = (137, 119, 173)
+GROUND_SHADOW = (15, 18, 24)
+GROUND_LIGHT = (38, 44, 55)
+PLATFORM_BASE = (36, 44, 60)
+PLATFORM_EDGE = (66, 80, 109)
+PLAYER_BODY = (210, 214, 225)
+PLAYER_OUTLINE = (40, 50, 64)
+ENEMY_BODY = (72, 111, 140)
+ENEMY_OUTLINE = (22, 27, 38)
+GLOW_COLOR = (120, 205, 255, 90)
 
 # Ground level
 GROUND_LEVEL = WINDOW_HEIGHT - 50
+
+
+def build_vertical_gradient(width, height, top_color, bottom_color):
+    surface = pygame.Surface((width, height))
+    for y in range(height):
+        t = y / (height - 1)
+        color = (
+            int(top_color[0] * (1 - t) + bottom_color[0] * t),
+            int(top_color[1] * (1 - t) + bottom_color[1] * t),
+            int(top_color[2] * (1 - t) + bottom_color[2] * t),
+        )
+        pygame.draw.line(surface, color, (0, y), (width, y))
+    return surface
+
+
+BACKGROUND_LAYERS = [
+    {"color": (18, 30, 47), "parallax": 0.1, "height": 110},
+    {"color": (24, 38, 58), "parallax": 0.18, "height": 80},
+    {"color": (30, 48, 68), "parallax": 0.26, "height": 60},
+]
+
+
+def draw_parallax_layers(screen, timer, room_index):
+    for idx, layer in enumerate(BACKGROUND_LAYERS):
+        offset = (timer * 30 * layer["parallax"] + room_index * 60) % 200
+        base_y = GROUND_LEVEL - layer["height"]
+        for x in range(-200, WINDOW_WIDTH + 200, 160):
+            peak_offset = math.sin((timer * 0.3) + (x * 0.02)) * (12 + idx * 6)
+            pts = [
+                (x + offset, GROUND_LEVEL),
+                (x + 80 + offset, base_y - peak_offset),
+                (x + 160 + offset, GROUND_LEVEL),
+            ]
+            pygame.draw.polygon(screen, layer["color"], pts)
+
+
+def draw_mist_overlay(screen, timer):
+    mist = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.SRCALPHA)
+    alpha = 28 + int(12 * math.sin(timer * 0.5))
+    mist.fill((MIST_BLUE[0], MIST_BLUE[1], MIST_BLUE[2], alpha))
+    screen.blit(mist, (0, 0))
+
+
+def build_ground_surface():
+    ground_surface = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT - GROUND_LEVEL))
+    for y in range(ground_surface.get_height()):
+        t = y / max(1, ground_surface.get_height() - 1)
+        color = (
+            int(GROUND_SHADOW[0] * (1 - t) + GROUND_LIGHT[0] * t),
+            int(GROUND_SHADOW[1] * (1 - t) + GROUND_LIGHT[1] * t),
+            int(GROUND_SHADOW[2] * (1 - t) + GROUND_LIGHT[2] * t),
+        )
+        pygame.draw.line(ground_surface, color, (0, y), (WINDOW_WIDTH, y))
+    return ground_surface
+
+
+GROUND_SURFACE = build_ground_surface()
+
+
+def draw_ground(screen):
+    screen.blit(GROUND_SURFACE, (0, GROUND_LEVEL))
+    pygame.draw.line(screen, PLATFORM_EDGE, (0, GROUND_LEVEL), (WINDOW_WIDTH, GROUND_LEVEL), 2)
+
+
+def draw_ui(screen, font, player, current_room, total_rooms):
+    hud_color = ACCENT_CYAN
+    instructions = [
+        "WASD / Arrows: move",
+        "Space: jump | Shift: sprint",
+        "Ctrl / J: dash",
+        f"Room {current_room + 1}/{total_rooms}",
+    ]
+    for i, text in enumerate(instructions):
+        text_surface = font.render(text, True, hud_color)
+        screen.blit(text_surface, (12, 12 + i * 26))
+
+    for i in range(player.max_health):
+        orb_color = PALE_GLOW if i < player.health else (80, 90, 110)
+        center = (WINDOW_WIDTH - 30 - i * 26, 32)
+        pygame.draw.circle(screen, orb_color, center, 10)
+        pygame.draw.circle(screen, PLAYER_OUTLINE, center, 10, 2)
+
+
+class Firefly:
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.x = random.uniform(0, WINDOW_WIDTH)
+        self.y = random.uniform(60, GROUND_LEVEL - 60)
+        self.speed = random.uniform(10, 24)
+        self.phase = random.uniform(0, 2 * math.pi)
+        self.radius = random.uniform(2, 4)
+
+    def update(self, dt):
+        self.phase += dt * 1.5
+        self.x += math.cos(self.phase) * self.speed * dt
+        self.y += math.sin(self.phase * 0.8) * self.speed * 0.2 * dt
+        if self.x < -20 or self.x > WINDOW_WIDTH + 20:
+            self.reset()
+
+    def draw(self, screen):
+        glow = pygame.Surface((16, 16), pygame.SRCALPHA)
+        pygame.draw.circle(glow, GLOW_COLOR, (8, 8), 6)
+        screen.blit(glow, (self.x - 8, self.y - 8), special_flags=pygame.BLEND_ADD)
+        pygame.draw.circle(screen, PALE_GLOW, (int(self.x), int(self.y)), int(self.radius))
+
+
+class GroundDustParticle:
+    def __init__(self, x, y, facing, intense=False):
+        spread = 6 if intense else 4
+        self.x = x + random.uniform(-spread, spread)
+        self.y = y + random.uniform(-2, 2)
+        speed = 2.5 if intense else 1.5
+        self.vx = random.uniform(-0.6, 0.6) + facing * speed
+        self.vy = random.uniform(-1.2, -0.3) if intense else random.uniform(-0.6, -0.2)
+        self.life = random.randint(22, 32) if intense else random.randint(16, 24)
+        self.age = 0
+        self.intense = intense
+
+    def update(self):
+        self.x += self.vx
+        self.y += self.vy
+        self.vy += 0.12
+        self.age += 1
+        return self.age < self.life
+
+    def draw(self, screen):
+        remaining = 1 - (self.age / self.life)
+        alpha = max(0, int(140 * remaining))
+        radius = 5 if self.intense else 4
+        surface = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+        pygame.draw.circle(
+            surface,
+            (GROUND_LIGHT[0], GROUND_LIGHT[1], GROUND_LIGHT[2], alpha),
+            (radius, radius),
+            radius,
+        )
+        screen.blit(surface, (self.x - radius, self.y - radius), special_flags=pygame.BLEND_PREMULTIPLIED)
+
 
 # Room class
 class Room:
@@ -43,7 +197,7 @@ class Room:
 
 # Platform class
 class Platform:
-    def __init__(self, x, y, width, height, color=BROWN):
+    def __init__(self, x, y, width, height, color=PLATFORM_BASE):
         self.x = x
         self.y = y
         self.width = width
@@ -55,8 +209,11 @@ class Platform:
         return pygame.Rect(self.x, self.y, self.width, self.height)
     
     def draw(self, screen):
-        pygame.draw.rect(screen, self.color, (self.x, self.y, self.width, self.height))
-        pygame.draw.rect(screen, STONE, (self.x, self.y, self.width, self.height), 2)
+        surface = pygame.Surface((self.width, self.height + 6), pygame.SRCALPHA)
+        pygame.draw.rect(surface, self.color, (0, 0, self.width, self.height))
+        pygame.draw.rect(surface, PLATFORM_EDGE, (0, self.height - 6, self.width, 6))
+        pygame.draw.line(surface, ACCENT_CYAN, (4, 4), (self.width - 4, 2), 1)
+        screen.blit(surface, (self.x, self.y))
 
 # Player class
 class Player:
@@ -66,7 +223,16 @@ class Player:
         self.width = 20
         self.height = 50
         self.speed = 4.5
-        self.color = RED
+        self.run_multiplier = RUN_MULTIPLIER
+        self.is_running = False
+        self.is_dashing = False
+        self.dash_timer = 0
+        self.dash_cooldown_timer = 0
+        self.dash_direction = 1
+        self.dash_speed = DASH_SPEED
+        self.facing = 1
+        self.dust_timer = 0
+        self.base_color = PLAYER_BODY
         self.velocity_y = 0  # Vertical velocity
         self.velocity_x = 0  # Horizontal velocity
         self.on_ground = False
@@ -91,38 +257,72 @@ class Player:
             self.height
         )
     
-    def update(self, keys, platforms):
+    def update(self, keys, platforms, dust_particles=None):
         if self.invuln_timer > 0:
             self.invuln_timer -= 1
+        if self.dash_cooldown_timer > 0:
+            self.dash_cooldown_timer -= 1
+        if self.is_dashing:
+            self.dash_timer -= 1
+            if self.dash_timer <= 0:
+                self.is_dashing = False
+        if self.dust_timer > 0:
+            self.dust_timer -= 1
 
         # Horizontal movement
         dx = 0
+        run_pressed = keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
+        move_speed = self.speed * (self.run_multiplier if run_pressed else 1)
+        dash_pressed = keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL] or keys[pygame.K_j]
+
         if self.alive:
             if keys[pygame.K_a] or keys[pygame.K_LEFT]:
-                dx -= self.speed
+                dx -= move_speed
             if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-                dx += self.speed
+                dx += move_speed
         else:
             self.velocity_x = 0
-        
+
+        if dx != 0:
+            self.facing = 1 if dx > 0 else -1
+        self.is_running = run_pressed and dx != 0 and not self.is_dashing
+
+        if (
+            dash_pressed
+            and not self.is_dashing
+            and self.dash_cooldown_timer <= 0
+            and self.alive
+        ):
+            direction = self.facing if dx == 0 else (1 if dx > 0 else -1)
+            if direction == 0:
+                direction = 1
+            self.is_dashing = True
+            self.dash_direction = direction
+            self.dash_timer = DASH_DURATION
+            self.dash_cooldown_timer = DASH_COOLDOWN
+            self.velocity_y = 0
+
         # Apply horizontal velocity
-        self.velocity_x = dx
-        
+        if self.is_dashing:
+            self.velocity_x = self.dash_direction * self.dash_speed
+        else:
+            self.velocity_x = dx
+
         # Apply friction when on ground and not moving
-        if self.on_ground and dx == 0:
+        if self.on_ground and dx == 0 and not self.is_dashing:
             self.velocity_x *= self.friction
             if abs(self.velocity_x) < 0.1:
                 self.velocity_x = 0
-        
+
         # Check if jump key is pressed
         jump_key_pressed = keys[pygame.K_UP] or keys[pygame.K_SPACE]
-        
+
         # Start jump (only when on ground)
         if self.alive and jump_key_pressed and self.on_ground:
             self.velocity_y = self.initial_jump_power  # Start with lower initial velocity
             self.on_ground = False
             self.is_jumping = True
-        
+
         # Variable jump height: continue applying upward force while holding jump
         if self.is_jumping and jump_key_pressed and self.velocity_y < 0:
             # Apply additional upward force while holding jump
@@ -135,17 +335,20 @@ class Player:
             # Stop applying jump force when key is released or falling
             if self.velocity_y >= 0:
                 self.is_jumping = False
-        
+
         # Apply gravity
-        self.velocity_y += self.gravity
-        
+        if self.is_dashing:
+            self.velocity_y += self.gravity * DASH_GRAVITY_SCALE
+        else:
+            self.velocity_y += self.gravity
+
         # Store previous position for collision detection
         prev_x = self.x
         prev_y = self.y
-        
+
         # Update horizontal position first
         self.x += self.velocity_x
-        
+
         # Check horizontal collisions
         player_rect = self.get_rect()
         for platform in platforms:
@@ -167,24 +370,24 @@ class Player:
                         self.x = platform.x - self.width / 2
                     else:
                         self.x = platform.x + platform.width + self.width / 2
-        
+
         # Update vertical position
         self.y += self.velocity_y
-        
+
         # Check vertical collisions
         self.on_ground = False
         player_rect = self.get_rect()
-        
+
         for platform in platforms:
             platform_rect = platform.get_rect()
-            
+
             if player_rect.colliderect(platform_rect):
                 # Use previous position to determine collision direction
                 prev_player_bottom = prev_y + self.height / 2
                 prev_player_top = prev_y - self.height / 2
                 platform_top = platform.y
                 platform_bottom = platform.y + platform.height
-                
+
                 # Check if player was above platform before moving (falling down)
                 if prev_player_bottom <= platform_top and self.velocity_y >= 0:
                     # Landing on top of platform
@@ -200,7 +403,7 @@ class Player:
                 else:
                     overlap_top = (self.y + self.height / 2) - platform.y
                     overlap_bottom = (platform.y + platform.height) - (self.y - self.height / 2)
-                    
+
                     if overlap_top < overlap_bottom:
                         self.y = platform.y - self.height / 2
                         self.velocity_y = 0
@@ -208,7 +411,7 @@ class Player:
                     else:
                         self.y = platform.y + platform.height + self.height / 2
                         self.velocity_y = 0
-        
+
         # Ground collision (only if not on a platform)
         if not self.on_ground:
             player_bottom = self.y + self.height / 2
@@ -216,29 +419,31 @@ class Player:
                 self.y = GROUND_LEVEL - self.height / 2
                 self.velocity_y = 0
                 self.on_ground = True
-        
+
         # Check for room transitions (walking off edges)
         room_change = 0  # -1 for left (previous room), 1 for right (next room), 0 for no change
-        
+
         # Check if player walked off left edge
         if self.x - self.width / 2 < 0:
             room_change = -1
             self.x = WINDOW_WIDTH - self.width / 2 - 10  # Position on right side of new room
-        
+
         # Check if player walked off right edge
         elif self.x + self.width / 2 > WINDOW_WIDTH:
             room_change = 1
             self.x = self.width / 2 + 10  # Position on left side of new room
-        
+
         # Keep player within canvas bounds (horizontal) - only if not transitioning
         if room_change == 0:
             self.x = max(self.width / 2, min(WINDOW_WIDTH - self.width / 2, self.x))
-        
+
         # Prevent player from going above canvas
         if self.y - self.height / 2 < 0:
             self.y = self.height / 2
             self.velocity_y = 0
-        
+
+        self._maybe_emit_dust(dust_particles)
+
         return room_change
 
     def take_damage(self, amount=1, knockback=0):
@@ -256,40 +461,97 @@ class Player:
             self.velocity_y = self.initial_jump_power / 2
     
     def draw(self, screen):
-        # Flash white while invulnerable to indicate recent damage
-        draw_color = self.color
-        if self.invuln_timer > 0 and (self.invuln_timer // 5) % 2 == 0:
-            draw_color = WHITE
+        body_color = self.base_color if self.alive else SOFT_PURPLE
+        if self.invuln_timer > 0 and (self.invuln_timer // 4) % 2 == 0:
+            body_color = PALE_GLOW
 
-        pygame.draw.rect(
-            screen,
-            draw_color,
-            (self.x - self.width / 2, self.y - self.height / 2, self.width, self.height)
+        # Faint shadow
+        shadow_surface = pygame.Surface((int(self.width * 1.8), 16), pygame.SRCALPHA)
+        pygame.draw.ellipse(shadow_surface, (10, 10, 20, 90), (0, 0, shadow_surface.get_width(), 12))
+        screen.blit(
+            shadow_surface,
+            (self.x - shadow_surface.get_width() / 2, self.y + self.height / 2 - 4),
         )
-        
-        # Draw velocity indicator (optional visual feedback)
-        if not self.on_ground:
+
+        # Cloak
+        cloak_points = [
+            (self.x - self.width / 2 - 6, self.y + 4),
+            (self.x, self.y + self.height / 2 - 4),
+            (self.x + self.width / 2 + 6, self.y + 4),
+            (self.x, self.y + self.height / 2 + 2),
+        ]
+        pygame.draw.polygon(screen, SOFT_PURPLE, cloak_points)
+        pygame.draw.lines(screen, PLAYER_OUTLINE, False, cloak_points[:3], 2)
+
+        # Body
+        body_rect = pygame.Rect(
+            self.x - self.width / 2,
+            self.y - self.height / 2 + 6,
+            self.width,
+            self.height - 6,
+        )
+        pygame.draw.ellipse(screen, body_color, body_rect)
+        pygame.draw.ellipse(screen, PLAYER_OUTLINE, body_rect, 2)
+
+        # Head
+        head_rect = pygame.Rect(
+            self.x - self.width / 2 + 2,
+            self.y - self.height / 2 - 6,
+            self.width - 4,
+            self.height / 2,
+        )
+        pygame.draw.ellipse(screen, body_color, head_rect)
+        pygame.draw.ellipse(screen, PLAYER_OUTLINE, head_rect, 2)
+
+        horn_left = [
+            (self.x - 6, self.y - self.height / 2 - 2),
+            (self.x - 13, self.y - self.height / 2 - 16),
+            (self.x - 4, self.y - self.height / 2 - 8),
+        ]
+        horn_right = [
+            (self.x + 6, self.y - self.height / 2 - 2),
+            (self.x + 13, self.y - self.height / 2 - 16),
+            (self.x + 4, self.y - self.height / 2 - 8),
+        ]
+        pygame.draw.polygon(screen, PLAYER_BODY, horn_left)
+        pygame.draw.polygon(screen, PLAYER_BODY, horn_right)
+        pygame.draw.lines(screen, PLAYER_OUTLINE, False, horn_left, 2)
+        pygame.draw.lines(screen, PLAYER_OUTLINE, False, horn_right, 2)
+
+        # Wisp trail while moving through air or dashing
+        if not self.on_ground or self.is_dashing:
             pygame.draw.line(
                 screen,
-                RED,
+                ACCENT_CYAN,
                 (self.x, self.y),
-                (self.x + self.velocity_x * 2, self.y + self.velocity_y * 2),
-                2
+                (self.x - self.velocity_x * 2, self.y - self.velocity_y * 2),
+                2,
             )
-        
-        # Draw on-ground indicator
-        if self.on_ground:
-            pygame.draw.circle(
-                screen,
-                GREEN,
-                (int(self.x), int(self.y + self.height / 2 + 5)),
-                3
-            )
+
+    def _maybe_emit_dust(self, dust_particles):
+        if dust_particles is None or not self.on_ground:
+            return
+
+        speed_mag = abs(self.velocity_x)
+        if self.is_dashing and self.dust_timer <= 0:
+            self._spawn_dust(dust_particles, intense=True, count=3)
+            self.dust_timer = RUN_DUST_COOLDOWN
+        elif self.is_running and speed_mag > self.speed * 1.05 and self.dust_timer <= 0:
+            self._spawn_dust(dust_particles, intense=False, count=1)
+            self.dust_timer = RUN_DUST_COOLDOWN + 3
+
+    def _spawn_dust(self, dust_particles, intense=False, count=1):
+        if dust_particles is None:
+            return
+        facing = self.facing if self.facing != 0 else 1
+        foot_y = self.y + self.height / 2 + 3
+        for _ in range(count):
+            dust_particles.append(GroundDustParticle(self.x, foot_y, facing, intense=intense))
 
 
 # Simple enemy class
 class Enemy:
-    def __init__(self, x, y, width=28, height=36, color=(200, 60, 60), speed=1.2):
+    def __init__(self, x, y, width=28, height=36, color=ENEMY_BODY, speed=1.2):
         self.x = x
         self.y = y
         self.width = width
@@ -350,54 +612,17 @@ class Enemy:
 
         # Horizontal movement with acceleration for smoother motion
         target_speed = move_speed * self.direction
-        self.velocity_x += self.acceleration * (target_speed - self.velocity_x)
-        self.x += self.velocity_x
+        air_control = 0.55 if not self.on_ground else 1.0
+        self.velocity_x += self.acceleration * air_control * (target_speed - self.velocity_x)
+        max_speed = move_speed * (1.2 if self.on_ground else 0.9)
+        self.velocity_x = max(-max_speed, min(max_speed, self.velocity_x))
+        self._move_horizontal(platforms)
+        safe_x = self.x
 
-        # Resolve horizontal collisions
-        rect = self.get_rect()
-        for p in platforms:
-            pr = p.get_rect()
-            if rect.colliderect(pr):
-                if self.velocity_x > 0:
-                    self.x = pr.x - self.width / 2
-                elif self.velocity_x < 0:
-                    self.x = pr.x + pr.width + self.width / 2
-                self.velocity_x = 0
-                rect = self.get_rect()
-
-        # Apply gravity
+        # Apply gravity and vertical collisions
         self.velocity_y += self.gravity
-        self.y += self.velocity_y
-
-        # Simple collision with platforms (land on top)
-        self.on_ground = False
         self.current_platform = None
-        rect = self.get_rect()
-        for p in platforms:
-            pr = p.get_rect()
-            if rect.colliderect(pr):
-                platform_top = p.y
-                platform_bottom = p.y + p.height
-                prev_bottom = prev_y + self.height / 2
-                prev_top = prev_y - self.height / 2
-
-                if prev_bottom <= platform_top and self.velocity_y >= 0:
-                    # Land on platform
-                    self.y = platform_top - self.height / 2
-                    self.velocity_y = 0
-                    self.on_ground = True
-                    self.current_platform = p
-                    rect = self.get_rect()
-                elif prev_top >= platform_bottom and self.velocity_y <= 0:
-                    # Hit from below
-                    self.y = platform_bottom + self.height / 2
-                    self.velocity_y = 0
-                    rect = self.get_rect()
-                else:
-                    # Side overlap fallback: revert horizontal position
-                    self.x = prev_x
-                    self.velocity_x = 0
-                    rect = self.get_rect()
+        self._move_vertical(platforms, prev_y, safe_x)
 
         # Clamp to ground
         if not self.on_ground:
@@ -408,24 +633,39 @@ class Enemy:
                 self.on_ground = True
                 self.current_platform = None
                 self.velocity_x *= 0.8
+        else:
+            self.current_platform = self.current_platform or self._platform_underfoot(platforms)
 
-        # Keep inside screen and reverse on edges
-        left_edge = self.x - self.width / 2
-        right_edge = self.x + self.width / 2
-        if left_edge < 0:
-            self.x = self.width / 2
-            self.direction = 1
-            self.velocity_x = 0
-        elif right_edge > WINDOW_WIDTH:
-            self.x = WINDOW_WIDTH - self.width / 2
-            self.direction = -1
-            self.velocity_x = 0
-
+        self._keep_in_bounds()
         self._maybe_jump(platforms, player)
 
     def draw(self, screen):
-        pygame.draw.rect(screen, self.color, (self.x - self.width / 2, self.y - self.height / 2, self.width, self.height))
-        pygame.draw.rect(screen, BLACK, (self.x - self.width / 2, self.y - self.height / 2, self.width, self.height), 2)
+        if not self.alive:
+            return
+
+        glow_surface = pygame.Surface((self.width * 2, self.height * 2), pygame.SRCALPHA)
+        pygame.draw.circle(
+            glow_surface,
+            (80, 160, 255, 70),
+            (self.width, self.height),
+            self.width,
+        )
+        screen.blit(glow_surface, (self.x - self.width, self.y - self.height), special_flags=pygame.BLEND_ADD)
+
+        body_rect = pygame.Rect(
+            self.x - self.width / 2,
+            self.y - self.height / 2,
+            self.width,
+            self.height + 6,
+        )
+        pygame.draw.ellipse(screen, self.color, body_rect)
+        pygame.draw.ellipse(screen, ENEMY_OUTLINE, body_rect, 2)
+
+        eye_y = self.y - self.height / 4
+        pygame.draw.circle(screen, PALE_GLOW, (int(self.x - 6), int(eye_y)), 3)
+        pygame.draw.circle(screen, PALE_GLOW, (int(self.x + 6), int(eye_y)), 3)
+        pygame.draw.circle(screen, ENEMY_OUTLINE, (int(self.x - 6), int(eye_y)), 3, 1)
+        pygame.draw.circle(screen, ENEMY_OUTLINE, (int(self.x + 6), int(eye_y)), 3, 1)
 
     def take_damage(self, amount=9999):
         # One-hit kill for now
@@ -510,6 +750,67 @@ class Enemy:
             return
         self.direction = 1 if dx > 0 else -1
 
+    def _move_horizontal(self, platforms):
+        self.x += self.velocity_x
+        rect = self.get_rect()
+        for p in platforms:
+            pr = p.get_rect()
+            if rect.colliderect(pr):
+                if self.velocity_x > 0:
+                    self.x = pr.x - self.width / 2
+                elif self.velocity_x < 0:
+                    self.x = pr.x + pr.width + self.width / 2
+                self.velocity_x = 0
+                rect = self.get_rect()
+
+    def _move_vertical(self, platforms, prev_y, safe_x):
+        self.on_ground = False
+        rect = self.get_rect()
+        for p in platforms:
+            pr = p.get_rect()
+            if rect.colliderect(pr):
+                platform_top = p.y
+                platform_bottom = p.y + p.height
+                prev_bottom = prev_y + self.height / 2
+                prev_top = prev_y - self.height / 2
+
+                if prev_bottom <= platform_top and self.velocity_y >= 0:
+                    self.y = platform_top - self.height / 2
+                    self.velocity_y = 0
+                    self.on_ground = True
+                    self.current_platform = p
+                    rect = self.get_rect()
+                elif prev_top >= platform_bottom and self.velocity_y <= 0:
+                    self.y = platform_bottom + self.height / 2
+                    self.velocity_y = 0
+                    self.jump_timer = max(self.jump_timer, int(self.jump_cooldown * 0.6))
+                    rect = self.get_rect()
+                else:
+                    # Diagonal collision: revert horizontal movement to avoid snagging
+                    self.x = safe_x
+                    self.velocity_x = 0
+                    rect = self.get_rect()
+
+    def _keep_in_bounds(self):
+        left_edge = self.x - self.width / 2
+        right_edge = self.x + self.width / 2
+        if left_edge < 0:
+            self.x = self.width / 2
+            self.direction = 1
+            self.velocity_x = 0
+        elif right_edge > WINDOW_WIDTH:
+            self.x = WINDOW_WIDTH - self.width / 2
+            self.direction = -1
+            self.velocity_x = 0
+
+    def _platform_underfoot(self, platforms):
+        rect = self.get_rect()
+        foot_rect = rect.move(0, 2)
+        for p in platforms:
+            if foot_rect.colliderect(p.get_rect()):
+                return p
+        return None
+
 # Main async function for pygbag compatibility
 async def main():
     # Set up the display
@@ -585,6 +886,10 @@ async def main():
     # Font for instructions
     font = pygame.font.Font(None, 24)
     font_large = pygame.font.Font(None, 64)
+
+    background_surface = build_vertical_gradient(WINDOW_WIDTH, WINDOW_HEIGHT, MIDNIGHT_BLUE, DEEP_NAVY)
+    fireflies = [Firefly() for _ in range(26)]
+    ground_dust = []
     
     # Game loop
     running = True
@@ -596,12 +901,14 @@ async def main():
         
         # Get pressed keys
         keys = pygame.key.get_pressed()
+        dt = clock.get_time() / 1000.0
+        elapsed = pygame.time.get_ticks() / 1000.0
 
         # Keep previous player y for stomp detection
         prev_player_y = player.y
 
         # Update player and check for room transitions
-        room_change = player.update(keys, rooms[current_room].platforms)
+        room_change = player.update(keys, rooms[current_room].platforms, ground_dust)
         if not player.alive:
             game_over = True
 
@@ -644,15 +951,24 @@ async def main():
                 except ValueError:
                     pass
         
+        for particle in ground_dust[:]:
+            if not particle.update():
+                ground_dust.remove(particle)
+
+        for firefly in fireflies:
+            firefly.update(dt)
+
         # Draw everything
-        screen.fill(BLUE)
-        
-        # Draw ground
-        pygame.draw.rect(screen, EARTH, (0, GROUND_LEVEL, WINDOW_WIDTH, WINDOW_HEIGHT - GROUND_LEVEL))
-        pygame.draw.line(screen, BROWN, (0, GROUND_LEVEL), (WINDOW_WIDTH, GROUND_LEVEL), 2)
-        
+        screen.blit(background_surface, (0, 0))
+        draw_parallax_layers(screen, elapsed, current_room)
+        for firefly in fireflies:
+            firefly.draw(screen)
+        draw_ground(screen)
+
         # Draw current room's platforms
         rooms[current_room].draw(screen)
+        for particle in ground_dust:
+            particle.draw(screen)
         # Draw enemies for the current room
         for enemy in enemies_by_room[current_room]:
             enemy.draw(screen)
@@ -660,27 +976,14 @@ async def main():
         # Draw player
         player.draw(screen)
         
-        # Draw instructions and room info
-        instructions = [
-            "Use WASD or Arrow Keys to move",
-            "Space to jump",
-            "Enemies chase and jump toward you",
-            f"Room: {current_room + 1}/{len(rooms)}",
-            "Walk off edges to change rooms"
-        ]
-        for i, text in enumerate(instructions):
-            text_surface = font.render(text, True, WHITE)
-            screen.blit(text_surface, (10, 10 + i * 30))
-
-        # Draw player health on the top-right
-        health_text = font.render(f"Health: {player.health}/{player.max_health}", True, WHITE)
-        screen.blit(health_text, (WINDOW_WIDTH - health_text.get_width() - 10, 10))
+        draw_mist_overlay(screen, elapsed)
+        draw_ui(screen, font, player, current_room, len(rooms))
 
         if game_over:
             overlay = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.SRCALPHA)
             overlay.fill((0, 0, 0, 160))
             screen.blit(overlay, (0, 0))
-            game_over_text = font_large.render("Game Over", True, WHITE)
+            game_over_text = font_large.render("Shade Dispersed", True, PALE_GLOW)
             screen.blit(
                 game_over_text,
                 (
@@ -688,7 +991,7 @@ async def main():
                     (WINDOW_HEIGHT - game_over_text.get_height()) / 2 - 20,
                 ),
             )
-            hint_text = font.render("The enemies overwhelmed you!", True, WHITE)
+            hint_text = font.render("The abyss reclaims your light...", True, PALE_GLOW)
             screen.blit(
                 hint_text,
                 (
