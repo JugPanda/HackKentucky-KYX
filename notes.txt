@@ -61,3 +61,7 @@
 - Next.js API route `/api/build` validates Madlib payloads with the shared Zod schema, writes a temp config, runs the Python helper (`tools/build_game.py`), and publishes bundles to `landing-page/public/generated/<slug>/`.
 - Requires an environment with Python 3 + pygbag; configurable via `KYX_PYTHON`. Intended for local dev or custom workers (Vercel serverless may not support long-running pygbag builds without extra infra).
 - README documents how to call the endpoint and warns about hosting implications.
+
+## 13. Prompt-to-Config Generator
+- Added `landing-page/lib/promptToConfig.ts` plus `/api/generate-config` for the “describe your game” flow. Simple keyword matching picks tone/difficulty, palette themes, and fallback names so we can generate a valid config without touching JSON or calling paid AI APIs.
+- README now documents the endpoint so the UI can chain: prompt → config → `/api/build`.

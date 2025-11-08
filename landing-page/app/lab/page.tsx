@@ -42,13 +42,19 @@ const labOnboarding = [
   },
 ];
 
+type StatusState = { loading: boolean; message?: string; error?: boolean };
+
+const initialStatus: StatusState = { loading: false };
+
 export default function MadlibLabPage() {
   const [formData, setFormData] = useState<MadlibPayload>(defaultMadlibPayload);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [serverResponse, setServerResponse] = useState<MadlibApiResponse | null>(null);
-  const [status, setStatus] = useState<{ loading: boolean; message?: string; error?: boolean }>({
-    loading: false,
-  });
+  const [status, setStatus] = useState<StatusState>(initialStatus);
+  const [promptText, setPromptText] = useState("");
+  const [promptStatus, setPromptStatus] = useState<StatusState>(initialStatus);
+  const [buildStatus, setBuildStatus] = useState<StatusState>(initialStatus);
+  const [buildResult, setBuildResult] = useState<{ slug: string; url: string } | null>(null);
 
   const requestJson = useMemo(() => JSON.stringify(formData, null, 2), [formData]);
   const responseJson = useMemo(() => {
@@ -98,6 +104,68 @@ export default function MadlibLabPage() {
     }
   };
 
+  const applyGeneratedConfig = (config: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      survivorName: config?.story?.leadName ?? prev.survivorName,
+      codename: config?.story?.codename ?? prev.codename,
+      survivorBio: config?.story?.hubDescription ?? prev.survivorBio,
+      nemesisName: config?.story?.rivalName ?? prev.nemesisName,
+      safehouseName: config?.story?.hubName ?? prev.safehouseName,
+      safehouseDescription: config?.story?.hubDescription ?? prev.safehouseDescription,
+      victoryCondition: config?.story?.goal ?? prev.victoryCondition,
+      tone: config?.story?.tone ?? prev.tone,
+      difficulty: config?.story?.difficulty ?? prev.difficulty,
+    }));
+  };
+
+  const handlePromptGenerate = async () => {
+    if (!promptText.trim()) {
+      setPromptStatus({ loading: false, error: true, message: "Enter a prompt first" });
+      return;
+    }
+    setPromptStatus({ loading: true });
+    try {
+      const res = await fetch("/api/generate-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: promptText }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        setPromptStatus({ loading: false, error: true, message: data.message || "Failed to generate config" });
+        return;
+      }
+      applyGeneratedConfig(data.config);
+      setPromptStatus({ loading: false, message: "Draft applied to the form" });
+    } catch (error) {
+      console.error(error);
+      setPromptStatus({ loading: false, error: true, message: "Unable to generate config" });
+    }
+  };
+
+  const handleBuild = async () => {
+    setBuildStatus({ loading: true });
+    setBuildResult(null);
+    try {
+      const res = await fetch("/api/build", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        setBuildStatus({ loading: false, error: true, message: data.message || "Build failed" });
+        return;
+      }
+      setBuildResult(data.build);
+      setBuildStatus({ loading: false, message: "Playable build ready" });
+    } catch (error) {
+      console.error(error);
+      setBuildStatus({ loading: false, error: true, message: "Network error while building" });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#010409] text-slate-100">
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-12">
@@ -128,6 +196,36 @@ export default function MadlibLabPage() {
                 <p className="text-sm text-slate-300">{step.detail}</p>
               </div>
             ))}
+          </CardContent>
+        </Card>
+
+        <Card className="border-slate-800/70 bg-slate-950/40">
+          <CardContent className="space-y-4 p-6">
+            <div className="flex flex-col gap-2">
+              <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Describe your game</p>
+              <Textarea
+                rows={3}
+                placeholder="Example: A hopeful neon courier dodging rival cultists above a flooded city."
+                value={promptText}
+                onChange={(event) => setPromptText(event.target.value)}
+              />
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button onClick={handlePromptGenerate} disabled={promptStatus.loading}>
+                {promptStatus.loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Drafting
+                  </>
+                ) : (
+                  "Generate from prompt"
+                )}
+              </Button>
+              {promptStatus.message && (
+                <p className={`text-sm ${promptStatus.error ? "text-rose-300" : "text-emerald-300"}`}>
+                  {promptStatus.message}
+                </p>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -271,9 +369,28 @@ export default function MadlibLabPage() {
                     "Generate JSON template"
                   )}
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleBuild}
+                  disabled={buildStatus.loading}
+                  className="flex-1 min-w-[180px]"
+                >
+                  {buildStatus.loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Building playable demo
+                    </>
+                  ) : (
+                    "Build & upload demo"
+                  )}
+                </Button>
                 {status.message && (
                   <div className={`text-sm ${status.error ? "text-rose-300" : "text-emerald-300"}`}>
                     {status.message}
+                  </div>
+                )}
+                {buildStatus.message && (
+                  <div className={`text-sm ${buildStatus.error ? "text-rose-300" : "text-emerald-300"}`}>
+                    {buildStatus.message}
                   </div>
                 )}
               </div>
@@ -349,6 +466,23 @@ export default function MadlibLabPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {buildResult && (
+              <Card className="border-emerald-500/40 bg-emerald-500/10">
+                <CardContent className="space-y-3 p-6 text-sm text-emerald-100">
+                  <p className="text-xs uppercase tracking-[0.35em] text-emerald-200">Playable build</p>
+                  <p className="text-xl font-semibold text-white">/generated/{buildResult.slug}</p>
+                  <p>
+                    Share this link with your community. It serves the pygbag bundle produced from your current config.
+                  </p>
+                  <Button size="sm" variant="outline" asChild>
+                    <Link href={buildResult.url} target="_blank" rel="noreferrer">
+                      Open playable demo
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </section>
 

@@ -146,6 +146,16 @@ Key files:
 
 > **Important**: This route shells out to Python. In production you must provide a runtime with Python 3.12, `pygbag`, and `pygame-ce` installed (set `KYX_PYTHON` to the interpreter path if `python3` is not on `$PATH`). On Vercel or other serverless platforms, consider offloading builds to a queue/worker or GitHub Action.
 
+### Prompt-to-config API
+
+`POST /api/generate-config` body:
+
+```json
+{ "prompt": "I want a neon rooftop game about hopeful couriers" }
+```
+
+The route applies lightweight heuristics (keywords, fallback names, palette themes) to emit a `game_config` payload you can feed directly into `/api/build` or the CLI helper. Replace the AI layer later if you integrate a real LLM.
+
 ## Workflow Recap
 
 1. Adjust story/lore via the Madlib lab and download the JSON.
