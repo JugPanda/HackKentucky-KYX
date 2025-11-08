@@ -65,7 +65,6 @@ export default function MadlibLabPage() {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [formData, setFormData] = useState<MadlibPayload>(defaultMadlibPayload);
-  const [imagePreview, setImagePreview] = useState<string>("");
   const [promptText, setPromptText] = useState("");
   const [promptStatus, setPromptStatus] = useState<StatusState>(initialStatus);
   const [buildStatus, setBuildStatus] = useState<StatusState>(initialStatus);
@@ -286,7 +285,7 @@ export default function MadlibLabPage() {
             </Badge>
             <h1 className="text-4xl font-semibold text-white">Create Your Game</h1>
             <p className="text-lg text-slate-300">
-              Describe your game idea and we'll turn it into a playable platformer. 
+              Describe your game idea and we&apos;ll turn it into a playable platformer. 
               Sign in to build and share your game with the community!
             </p>
           </div>
@@ -306,7 +305,7 @@ export default function MadlibLabPage() {
         <Card className="border-slate-800/70 bg-slate-950/40">
           <CardContent className="space-y-4 p-6">
             <div className="flex flex-col gap-2">
-              <p className="text-lg font-semibold text-white">What's your game about?</p>
+              <p className="text-lg font-semibold text-white">What&apos;s your game about?</p>
               <p className="text-sm text-slate-400">Describe your game idea in a few sentences</p>
               <Textarea
                 rows={4}
