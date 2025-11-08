@@ -80,7 +80,7 @@ export default async function AdminReportsPage() {
                     <Button size="sm" variant="outline">
                       Dismiss
                     </Button>
-                    <Button size="sm" variant="destructive">
+                    <Button size="sm" variant="default">
                       Take Action
                     </Button>
                   </div>
