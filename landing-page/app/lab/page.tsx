@@ -16,25 +16,25 @@ import {
 } from "@/lib/schemas";
 
 const toneOptions: Array<{ label: string; value: MadlibPayload["tone"]; blurb: string }> = [
-  { label: "Hopeful", value: "hopeful", blurb: "Bright synths, morale boosts" },
-  { label: "Gritty", value: "gritty", blurb: "Sparse ammo, lower trust" },
-  { label: "Heroic", value: "heroic", blurb: "High stakes, bold VO" },
+  { label: "Hopeful", value: "hopeful", blurb: "Bright synths, high morale" },
+  { label: "Gritty", value: "gritty", blurb: "Grounded stakes, low resources" },
+  { label: "Heroic", value: "heroic", blurb: "Bold VO, cinematic beats" },
 ];
 
 const difficultyOptions: Array<{ label: string; value: MadlibPayload["difficulty"]; blurb: string }> = [
   { label: "Rookie", value: "rookie", blurb: "Story-first" },
   { label: "Veteran", value: "veteran", blurb: "Balanced tension" },
-  { label: "Nightmare", value: "nightmare", blurb: "Permadeath runs" },
+  { label: "Nightmare", value: "nightmare", blurb: "High pressure runs" },
 ];
 
 const labOnboarding = [
   {
     title: "Step 1 · Story hooks",
-    detail: "Name your survivor, codename, and nemesis so dialogue, UI, and promo assets feel bespoke.",
+    detail: "Name your lead, codename, and rival so dialogue, UI, and promo assets feel bespoke.",
   },
   {
     title: "Step 2 · Visual mood",
-    detail: "Describe the safehouse in plain language and drop an image. We prep it for the browser automatically.",
+    detail: "Describe the hub space in plain language and drop an image. We prep it for the browser automatically.",
   },
   {
     title: "Step 3 · Share + remix",
@@ -112,11 +112,10 @@ export default function MadlibLabPage() {
             <Badge className="border-emerald-500/40 bg-emerald-500/10 text-emerald-100">
               Isolated prototype
             </Badge>
-            <h1 className="text-4xl font-semibold text-white">Madlib outbreak lab</h1>
+            <h1 className="text-4xl font-semibold text-white">Madlib config lab</h1>
             <p className="text-lg text-slate-300">
-              Fill in survivor details, upload art, and press generate. We convert your prompts into a
-              JSON payload that patches the KYX zombie game without exposing non-technical players to
-              raw config files.
+              Fill in character details, upload art, and press generate. We convert your prompts into a
+              JSON payload that patches the KYX sample game without exposing non-technical players to raw config files.
             </p>
           </div>
         </div>
@@ -136,11 +135,11 @@ export default function MadlibLabPage() {
           <Card className="border-slate-800/70 bg-slate-950/40">
             <CardContent className="space-y-6 p-6">
               <div className="flex flex-col gap-2">
-                <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Survivor story</p>
+                <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Character brief</p>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                      Name
+                      Lead name
                     </label>
                     <Input
                       value={formData.survivorName}
@@ -156,7 +155,7 @@ export default function MadlibLabPage() {
                 </div>
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                    Survivor bio
+                    Lead bio
                   </label>
                   <Textarea
                     rows={3}
@@ -167,10 +166,10 @@ export default function MadlibLabPage() {
               </div>
 
               <div className="space-y-4">
-                <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Nemesis + tone</p>
+                <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Rival + tone</p>
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                    Horde name
+                    Rival name
                   </label>
                   <Input
                     value={formData.nemesisName}
@@ -197,11 +196,11 @@ export default function MadlibLabPage() {
               </div>
 
               <div className="space-y-4">
-                <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Safehouse</p>
+                <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Hub location</p>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                      Safehouse name
+                      Hub name
                     </label>
                     <Input
                       value={formData.safehouseName}
@@ -230,7 +229,7 @@ export default function MadlibLabPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                    Upload photo
+                    Upload hub photo
                   </label>
                   <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-slate-700/70 bg-slate-950/40 px-4 py-8 text-center text-sm text-slate-400 hover:border-slate-500/80">
                     <UploadCloud className="h-6 w-6 text-slate-300" />
@@ -291,7 +290,7 @@ export default function MadlibLabPage() {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={imagePreview || formData.safehouseImage}
-                        alt="Safehouse preview"
+                        alt="Hub preview"
                         className="h-full w-full object-cover"
                       />
                     ) : (
@@ -308,7 +307,7 @@ export default function MadlibLabPage() {
                     <p className="text-lg font-semibold text-white">{formData.survivorName}</p>
                     <p className="text-sm text-slate-400">{formData.survivorBio}</p>
                     <div className="rounded-xl border border-slate-800/70 bg-slate-950/40 px-4 py-3 text-sm text-slate-200">
-                      <span className="font-semibold text-white">Nemesis:</span> {formData.nemesisName}
+                      <span className="font-semibold text-white">Rival:</span> {formData.nemesisName}
                     </div>
                     <div className="rounded-xl border border-slate-800/70 bg-slate-950/40 px-4 py-3 text-sm text-slate-200">
                       <span className="font-semibold text-white">Goal:</span> {formData.victoryCondition}
