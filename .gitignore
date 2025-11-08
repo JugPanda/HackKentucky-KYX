@@ -51,3 +51,5 @@ landing-page/node_modules/
 landing-page/.next/
 landing-page/.turbo/
 landing-page/out/
+landing-page/public/generated/*
+!landing-page/public/generated/.gitkeep

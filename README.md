@@ -96,7 +96,8 @@ After copying, re-run `npm run build` inside `landing-page/` and redeploy (e.g.,
 The Python runtime merges `demo-game/game_config.json` with hard-coded defaults at start-up. Update this file (or supply a generated payload from the Madlib lab) to change:
 
 - Story beats: lead/codename, rival, hub name/description, victory text, tone/difficulty labels
-- HUD copy: game-over title/message, instructions
+- HUD copy: game-over title/message, up to three custom instruction lines
+- Visual palette: accent, HUD glow, background gradient (hex or RGB tuples)
 - Tuning knobs: player max health, run multiplier, dash speed, enemy base speed
 
 If a field is missing, the engine falls back to defaults—safe for untrusted configs.
@@ -139,12 +140,18 @@ Key files:
 - Build command: `npm run build` (default)
 - Output: `.next`
 
+### Build API (experimental)
+
+`POST /api/build` accepts the same payload produced by the Madlib lab, writes it to `demo-game/game_config.json`, runs `tools/build_game.py`, and copies the bundle into `landing-page/public/generated/<slug>/`. The response includes a permalink such as `/generated/<slug>/index.html`.
+
+> **Important**: This route shells out to Python. In production you must provide a runtime with Python 3.12, `pygbag`, and `pygame-ce` installed (set `KYX_PYTHON` to the interpreter path if `python3` is not on `$PATH`). On Vercel or other serverless platforms, consider offloading builds to a queue/worker or GitHub Action.
+
 ## Workflow Recap
 
 1. Adjust story/lore via the Madlib lab and download the JSON.
 2. Drop the payload into `demo-game/game_config.json` (or merge it server-side).
-3. Run `pygbag main.py` from `demo-game/` to regenerate the WebAssembly bundle.
-4. Copy `demo-game/build/web/*` into `landing-page/public/demo-game/`.
+3. Run `pygbag main.py` from `demo-game/` (or use `python tools/build_game.py --config payload.json`).
+4. Copy `demo-game/build/web/*` into `landing-page/public/demo-game/` **or** let the build API publish to `/generated/<slug>`.
 5. `npm run build` in `landing-page/` and redeploy (Vercel, etc.).
 
 ## License

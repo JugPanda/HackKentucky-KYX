@@ -11,11 +11,21 @@
     "difficulty": "veteran",
     "gameOverTitle": "Shade Dispersed",
     "gameOverMessage": "Beacon’s light falters—reroute and try again."
+    "instructions": [
+      "Type: narrative platformer",
+      "Players explore neon labs above flooded streets"
+    ]
   },
   "tuning": {
     "playerMaxHealth": 3,
     "runMultiplier": 1.45,
     "dashSpeed": 14,
     "enemyBaseSpeed": 1.2
+  },
+  "colors": {
+    "accent": "#82ceff",
+    "hud": "#D3EAFF",
+    "backgroundTop": "#0e1521",
+    "backgroundBottom": "#132035"
   }
 }

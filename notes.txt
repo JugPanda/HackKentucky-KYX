@@ -50,9 +50,14 @@
 ## 10. Config-Driven Runtime
 - Added `demo-game/game_config.json` plus a loader that deep-merges user payloads into sane defaults. Missing/invalid keys fall back, so untrusted JSON from the site can’t crash the engine.
 - Player/enemy tuning (max health, run multiplier, dash speed, enemy base speed) now uses config values instead of hard-coded constants.
-- Story metadata (lead, rival, hub, goals, game-over copy) is surfaced in HUD instructions and overlays, making it obvious how the Madlib lab influences the playable build.
+- Story metadata (lead, rival, hub, goals, game-over copy) is surfaced in HUD instructions and overlays, making it obvious how the Madlib lab influences the playable build. Config also accepts custom instruction lines and palette overrides.
 
 ## 11. Automated Build Helper
 - Created `tools/build_game.py` CLI: `python tools/build_game.py --config payload.json --slug demo`.
 - Script validates JSON, writes `demo-game/game_config.json`, runs `pygbag main.py`, and copies `demo-game/build/web` into `dist/<slug>/` so the site can ingest per-build bundles.
 - Added README/INDEX notes describing the config file and the helper workflow to prepare for backend automation.
+
+## 12. Backend Build Endpoint (landing-page/app/api/build)
+- Next.js API route `/api/build` validates Madlib payloads with the shared Zod schema, writes a temp config, runs the Python helper (`tools/build_game.py`), and publishes bundles to `landing-page/public/generated/<slug>/`.
+- Requires an environment with Python 3 + pygbag; configurable via `KYX_PYTHON`. Intended for local dev or custom workers (Vercel serverless may not support long-running pygbag builds without extra infra).
+- README documents how to call the endpoint and warns about hosting implications.

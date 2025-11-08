@@ -29,12 +29,22 @@ DEFAULT_CONFIG = {
         "difficulty": "veteran",
         "gameOverTitle": "Shade Dispersed",
         "gameOverMessage": "The abyss reclaims your light...",
+        "instructions": [
+            "Type: narrative platformer",
+            "Players explore neon labs above flooded streets",
+        ],
     },
     "tuning": {
         "playerMaxHealth": 3,
         "runMultiplier": 1.45,
         "dashSpeed": 14,
         "enemyBaseSpeed": 1.2,
+    },
+    "colors": {
+        "accent": "#82ceff",
+        "hud": "#d3eaff",
+        "backgroundTop": "#0e1521",
+        "backgroundBottom": "#132035",
     },
 }
 
@@ -66,6 +76,28 @@ def load_game_config():
 GAME_CONFIG = load_game_config()
 STORY_CONFIG = GAME_CONFIG["story"]
 TUNING_CONFIG = GAME_CONFIG["tuning"]
+COLOR_CONFIG = GAME_CONFIG.get("colors", {})
+
+
+def parse_hex_color(value: str):
+    value = value.lstrip("#")
+    if len(value) == 6:
+        return tuple(int(value[i : i + 2], 16) for i in range(0, 6, 2))
+    if len(value) == 3:
+        return tuple(int(value[i] * 2, 16) for i in range(3))
+    raise ValueError("Unsupported color format")
+
+
+def color_from_config(key: str, fallback):
+    raw = COLOR_CONFIG.get(key)
+    if isinstance(raw, (list, tuple)) and len(raw) >= 3:
+        return tuple(int(c) for c in raw[:3])
+    if isinstance(raw, str):
+        try:
+            return parse_hex_color(raw)
+        except ValueError:
+            return fallback
+    return fallback
 
 # Constants
 WINDOW_WIDTH = 800
@@ -83,12 +115,12 @@ ENEMY_BASE_SPEED = float(TUNING_CONFIG.get("enemyBaseSpeed", 1.2))
 # Colors tuned toward a Hollow Knight inspired palette
 WHITE = (245, 246, 255)
 INK_BLACK = (8, 9, 16)
-MIDNIGHT_BLUE = (14, 21, 33)
-DEEP_NAVY = (19, 32, 53)
+MIDNIGHT_BLUE = color_from_config("backgroundTop", (14, 21, 33))
+DEEP_NAVY = color_from_config("backgroundBottom", (19, 32, 53))
 ABYSS_TEAL = (36, 57, 78)
 MIST_BLUE = (78, 101, 128)
-PALE_GLOW = (211, 234, 255)
-ACCENT_CYAN = (130, 206, 255)
+PALE_GLOW = color_from_config("hud", (211, 234, 255))
+ACCENT_CYAN = color_from_config("accent", (130, 206, 255))
 SOFT_PURPLE = (137, 119, 173)
 GROUND_SHADOW = (15, 18, 24)
 GROUND_LIGHT = (38, 44, 55)
@@ -181,6 +213,8 @@ def draw_ui(screen, font, player, current_room, total_rooms):
         f"Goal: {goal}",
         f"Room {current_room + 1}/{total_rooms}",
     ]
+    extra_lines = STORY_CONFIG.get("instructions") or []
+    instructions.extend(extra_lines[:3])
     for i, text in enumerate(instructions):
         text_surface = font.render(text, True, hud_color)
         screen.blit(text_surface, (12, 12 + i * 26))
