@@ -46,3 +46,13 @@
 - Landing page (Next.js) now embeds `landing-page/public/demo-game/index.html` via iframe, includes engine pipeline explaining how Madlib JSON feeds `demo-game/main.py`, and features generalized copy (no longer zombie-only).
 - Madlib lab language updated to “lead/rival/hub” terminology while still outputting compatible JSON.
 - Added documentation in README/INDEX to describe copying `demo-game/build/web` into the Next.js public folder so the playable iframe stays up to date.
+
+## 10. Config-Driven Runtime
+- Added `demo-game/game_config.json` plus a loader that deep-merges user payloads into sane defaults. Missing/invalid keys fall back, so untrusted JSON from the site can’t crash the engine.
+- Player/enemy tuning (max health, run multiplier, dash speed, enemy base speed) now uses config values instead of hard-coded constants.
+- Story metadata (lead, rival, hub, goals, game-over copy) is surfaced in HUD instructions and overlays, making it obvious how the Madlib lab influences the playable build.
+
+## 11. Automated Build Helper
+- Created `tools/build_game.py` CLI: `python tools/build_game.py --config payload.json --slug demo`.
+- Script validates JSON, writes `demo-game/game_config.json`, runs `pygbag main.py`, and copies `demo-game/build/web` into `dist/<slug>/` so the site can ingest per-build bundles.
+- Added README/INDEX notes describing the config file and the helper workflow to prepare for backend automation.

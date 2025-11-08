@@ -3,25 +3,82 @@ Multi-Room Platformer Game
 Web-compatible with pygbag
 """
 
-import pygame
 import asyncio
-import random
+import json
 import math
+import random
+from pathlib import Path
+
+import pygame
 
 # Initialize Pygame
 pygame.init()
+
+CONFIG_PATH = Path(__file__).with_name("game_config.json")
+
+DEFAULT_CONFIG = {
+    "story": {
+        "title": "Riverside Relay",
+        "leadName": "Dr. Rowan Hale",
+        "codename": "Beacon",
+        "rivalName": "The Mireborn",
+        "hubName": "Riverside Relay",
+        "hubDescription": "Stacked containers form a neon-lit lab above the floodline. Solar rigs, med bays, and a patched radio tower pierce the fog.",
+        "goal": "Synthesize the Riverside serum before the river corrodes the hub.",
+        "tone": "hopeful",
+        "difficulty": "veteran",
+        "gameOverTitle": "Shade Dispersed",
+        "gameOverMessage": "The abyss reclaims your light...",
+    },
+    "tuning": {
+        "playerMaxHealth": 3,
+        "runMultiplier": 1.45,
+        "dashSpeed": 14,
+        "enemyBaseSpeed": 1.2,
+    },
+}
+
+
+def deep_merge(base, override):
+    for key, value in override.items():
+        if (
+            isinstance(value, dict)
+            and isinstance(base.get(key), dict)
+        ):
+            deep_merge(base[key], value)
+        else:
+            base[key] = value
+    return base
+
+
+def load_game_config():
+    data = {}
+    if CONFIG_PATH.exists():
+        try:
+            with CONFIG_PATH.open("r", encoding="utf-8") as config_file:
+                data = json.load(config_file)
+        except json.JSONDecodeError:
+            data = {}
+    merged = json.loads(json.dumps(DEFAULT_CONFIG))
+    return deep_merge(merged, data)
+
+
+GAME_CONFIG = load_game_config()
+STORY_CONFIG = GAME_CONFIG["story"]
+TUNING_CONFIG = GAME_CONFIG["tuning"]
 
 # Constants
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
 FPS = 60
-PLAYER_MAX_HEALTH = 3
-RUN_MULTIPLIER = 1.45
-DASH_SPEED = 14
+PLAYER_MAX_HEALTH = max(1, int(TUNING_CONFIG.get("playerMaxHealth", 3)))
+RUN_MULTIPLIER = float(TUNING_CONFIG.get("runMultiplier", 1.45))
+DASH_SPEED = float(TUNING_CONFIG.get("dashSpeed", 14))
 DASH_DURATION = 14
 DASH_COOLDOWN = 48
 DASH_GRAVITY_SCALE = 0.25
 RUN_DUST_COOLDOWN = 5
+ENEMY_BASE_SPEED = float(TUNING_CONFIG.get("enemyBaseSpeed", 1.2))
 
 # Colors tuned toward a Hollow Knight inspired palette
 WHITE = (245, 246, 255)
@@ -111,10 +168,17 @@ def draw_ground(screen):
 
 def draw_ui(screen, font, player, current_room, total_rooms):
     hud_color = ACCENT_CYAN
+    lead_name = STORY_CONFIG.get("leadName", "Lead")
+    codename = STORY_CONFIG.get("codename", "Codename")
+    rival = STORY_CONFIG.get("rivalName", "Rival")
+    goal = STORY_CONFIG.get("goal", "Reach the exit.")
     instructions = [
+        STORY_CONFIG.get("title", "KYX Demo"),
         "WASD / Arrows: move",
-        "Space: jump | Shift: sprint",
-        "Ctrl / J: dash",
+        "Space: jump | Shift: sprint | Ctrl / J: dash",
+        f"Lead: {lead_name} (\"{codename}\")",
+        f"Rival: {rival}",
+        f"Goal: {goal}",
         f"Room {current_room + 1}/{total_rooms}",
     ]
     for i, text in enumerate(instructions):
@@ -551,7 +615,7 @@ class Player:
 
 # Simple enemy class
 class Enemy:
-    def __init__(self, x, y, width=28, height=36, color=ENEMY_BODY, speed=1.2):
+    def __init__(self, x, y, width=28, height=36, color=ENEMY_BODY, speed=ENEMY_BASE_SPEED):
         self.x = x
         self.y = y
         self.width = width
@@ -815,7 +879,7 @@ class Enemy:
 async def main():
     # Set up the display
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    pygame.display.set_caption("WASD Movement with Gravity - Multi-Room")
+    pygame.display.set_caption(f"KYX · {STORY_CONFIG.get('title', 'Demo Build')}")
     clock = pygame.time.Clock()
     
     # Create player
@@ -983,7 +1047,7 @@ async def main():
             overlay = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.SRCALPHA)
             overlay.fill((0, 0, 0, 160))
             screen.blit(overlay, (0, 0))
-            game_over_text = font_large.render("Shade Dispersed", True, PALE_GLOW)
+            game_over_text = font_large.render(STORY_CONFIG.get("gameOverTitle", "Shade Dispersed"), True, PALE_GLOW)
             screen.blit(
                 game_over_text,
                 (
@@ -991,7 +1055,7 @@ async def main():
                     (WINDOW_HEIGHT - game_over_text.get_height()) / 2 - 20,
                 ),
             )
-            hint_text = font.render("The abyss reclaims your light...", True, PALE_GLOW)
+            hint_text = font.render(STORY_CONFIG.get("gameOverMessage", "The abyss reclaims your light..."), True, PALE_GLOW)
             screen.blit(
                 hint_text,
                 (

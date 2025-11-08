@@ -1,0 +1,21 @@
+{
+  "story": {
+    "title": "Riverside Relay",
+    "leadName": "Dr. Rowan Hale",
+    "codename": "Beacon",
+    "rivalName": "The Mireborn",
+    "hubName": "Riverside Relay",
+    "hubDescription": "Stacked containers form a neon-lit lab above the floodline. Solar rigs, med bays, and a patched radio tower pierce the fog.",
+    "goal": "Synthesize the Riverside serum before the river corrodes the hub.",
+    "tone": "hopeful",
+    "difficulty": "veteran",
+    "gameOverTitle": "Shade Dispersed",
+    "gameOverMessage": "Beacon’s light falters—reroute and try again."
+  },
+  "tuning": {
+    "playerMaxHealth": 3,
+    "runMultiplier": 1.45,
+    "dashSpeed": 14,
+    "enemyBaseSpeed": 1.2
+  }
+}

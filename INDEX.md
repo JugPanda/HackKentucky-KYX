@@ -3,7 +3,7 @@
 _Last updated: 2025-11-08 (UTC)_
 
 ## Snapshot
-- `demo-game/` contains the Hollow Knight-inspired pygame-ce platformer with sprint/dash, dust FX, parallax art, and asynchronous pygbag loop.
+- `demo-game/` contains the Hollow Knight-inspired pygame-ce platformer with sprint/dash, dust FX, parallax art, and asynchronous pygbag loop. Story/tuning values now load from `demo-game/game_config.json`.
 - `landing-page/` is the Next.js 14 marketing site + Madlib lab. It embeds the pygbag build (copied into `landing-page/public/demo-game/`) so visitors can play the Python demo inside the site.
 - Root docs (`README.md`, `notes.txt`, this index) describe how the Python game and Next.js site work together; `requirements.txt` pins pygame-ce + pygbag.
 - Generated folders (`demo-game/build/web-cache`, `demo-game/__pycache__`, `landing-page/.next/`) are safe to delete/regenerate.
@@ -12,6 +12,7 @@ _Last updated: 2025-11-08 (UTC)_
 ```
 HackKentucky-KYX/
 ├── demo-game/
+│   ├── game_config.json
 │   ├── main.py
 │   └── build/
 │       ├── version.txt
@@ -41,7 +42,8 @@ HackKentucky-KYX/
 ## File Details
 
 ### Gameplay Code (`demo-game/`)
-- `main.py` – Asynchronous pygame-ce loop with Hollow Knight-inspired palette, parallax backgrounds, sprint/dash player controller, dust particles, horned sprite rendering, health orbs, and smarter enemies. Designed for pygbag (WebAssembly) export and for consumption of Madlib-generated JSON.
+- `main.py` – Asynchronous pygame-ce loop with Hollow Knight-inspired palette, parallax backgrounds, sprint/dash player controller, dust particles, horned sprite rendering, health orbs, and smarter enemies. Loads story/tuning from `game_config.json` so the Madlib lab can drive copy + difficulty.
+- `game_config.json` – Mergeable config (story title, lead/rival names, goal text, difficulty, player/enemy tuning). Missing fields fallback to defaults inside `main.py`.
 - `build/` – Output of `pygbag main.py`. `web/` holds the distributable bundle copied into the Next.js public folder; `web-cache/` caches pygbag chunks; `version.txt` tracks pygbag version.
 
 ### Website & Builder (`landing-page/`)
@@ -60,6 +62,7 @@ HackKentucky-KYX/
 - `notes.txt` – Development log covering combat, AI, visual pass, dash/dust systems, and site integration.
 - `requirements.txt` – Python dependency pins (`pygame-ce>=2.3.0`, `pygbag>=0.6.0`) with reminder to uninstall vanilla pygame.
 - `.gitignore` – Ignores common Python/Node artifacts plus pygbag output while whitelisting `landing-page/lib/`.
+- `tools/build_game.py` – CLI helper that writes `game_config.json`, runs `pygbag`, and copies the bundle into `dist/<slug>/`.
 
 ## Quick Reference
 - Install Python deps: `pip install -r requirements.txt` (after `pip uninstall pygame` if necessary)

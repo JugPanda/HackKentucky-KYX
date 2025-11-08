@@ -20,6 +20,7 @@ Use the Madlib lab to define characters and tone, run `pygbag` to regenerate the
 
 - `demo-game/main.py` – Python/pygame game logic
 - `demo-game/build/` – Output of `pygbag main.py` (WebAssembly bundle + APK)
+- `demo-game/game_config.json` – Story + tuning values merged into the runtime at launch
 - `landing-page/` – Next.js marketing site and Madlib lab
 - `landing-page/public/demo-game/` – Static copy of the latest pygbag build served by the site
 - Root docs (`README.md`, `INDEX.md`, `notes.txt`) plus `requirements.txt`
@@ -90,9 +91,29 @@ After copying, re-run `npm run build` inside `landing-page/` and redeploy (e.g.,
 - **AI** – Patrol/chase/attack state machine, edge detection, jump decisions, separate horizontal/vertical collision resolution
 - **HUD** – Instruction stack, health orbs, dynamic game-over messaging
 
+## Game Config (no JSON editing required)
+
+The Python runtime merges `demo-game/game_config.json` with hard-coded defaults at start-up. Update this file (or supply a generated payload from the Madlib lab) to change:
+
+- Story beats: lead/codename, rival, hub name/description, victory text, tone/difficulty labels
+- HUD copy: game-over title/message, instructions
+- Tuning knobs: player max health, run multiplier, dash speed, enemy base speed
+
+If a field is missing, the engine falls back to defaults—safe for untrusted configs.
+
 ## Customization
 
-`demo-game/main.py` is heavily parameterized. Modify constants to change window size, gravity, dash speed, palette, and room layouts. Add new `Room` instances or enemies, tweak the Madlib-driven storyline, or hook up additional sprites.
+Beyond the config file, `demo-game/main.py` exposes constants for window size, gravity, dash timings, palette, and room layouts. Add new `Room` instances or enemies, tweak the Hollow Knight palette, or hook up new sprites as needed.
+
+### Automated Build Script
+
+The helper script wraps the manual steps:
+
+```bash
+python tools/build_game.py --config ~/Downloads/madlib.json --slug campus-demo
+```
+
+It validates the JSON, writes `demo-game/game_config.json`, runs `pygbag main.py`, and copies `demo-game/build/web` into `dist/campus-demo/`. Pass `--skip-build` if you only want to update the config.
 
 ## Website (landing-page/)
 
@@ -120,8 +141,8 @@ Key files:
 
 ## Workflow Recap
 
-1. Adjust story/lore via the Madlib lab (or edit JSON manually).
-2. Feed the payload into `demo-game/main.py` logic if needed.
+1. Adjust story/lore via the Madlib lab and download the JSON.
+2. Drop the payload into `demo-game/game_config.json` (or merge it server-side).
 3. Run `pygbag main.py` from `demo-game/` to regenerate the WebAssembly bundle.
 4. Copy `demo-game/build/web/*` into `landing-page/public/demo-game/`.
 5. `npm run build` in `landing-page/` and redeploy (Vercel, etc.).
