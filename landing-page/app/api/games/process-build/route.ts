@@ -17,9 +17,11 @@ const supabase = createSupabaseClient(
 
 export async function POST(request: Request) {
   let tempDir: string | null = null;
+  let buildId: string | null = null;
 
   try {
-    const { buildId } = await request.json();
+    const body = await request.json();
+    buildId = body.buildId;
 
     // Get build job
     const { data: buildJob, error: buildError } = await supabase
