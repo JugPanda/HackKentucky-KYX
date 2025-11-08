@@ -85,7 +85,7 @@ export default function MadlibLabPage() {
         body: JSON.stringify(formData),
       });
       const data: MadlibApiResponse = await res.json();
-      if (!res.ok) {
+      if (!data.ok) {
         setStatus({ loading: false, error: true, message: data.message || "Validation failed" });
         setServerResponse(data);
         return;
