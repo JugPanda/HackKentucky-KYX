@@ -164,6 +164,28 @@ The route applies lightweight heuristics (keywords, fallback names, palette them
 4. Copy `demo-game/build/web/*` into `landing-page/public/demo-game/` **or** let the build API publish to `/generated/<slug>`.
 5. `npm run build` in `landing-page/` and redeploy (Vercel, etc.).
 
+## New Features (Community Platform)
+
+The KYX platform now includes a full-featured community system:
+
+- **User Accounts**: Sign up with email or GitHub OAuth
+- **Game Creation**: Describe your game in natural language, get a fully configured platformer
+- **Async Builds**: Queue-based build system with status tracking
+- **Community Pages**: Browse, play, and comment on games created by others
+- **Dashboard**: Manage your games, track stats, publish/unpublish
+- **Moderation**: Content filters, rate limiting, and admin tools
+
+### Quick Start (New Platform)
+
+1. **Set up Supabase**: Follow `SETUP.md` for complete instructions
+2. **Configure environment**: Copy `.env.local.example` and fill in your Supabase credentials
+3. **Run migrations**: Execute `landing-page/supabase-schema.sql` in your Supabase SQL editor
+4. **Start the server**: `cd landing-page && npm run dev`
+5. **Create an account**: Visit `/auth/sign-up`
+6. **Build your game**: Go to `/lab` and describe your game!
+
+See `SETUP.md` for detailed setup instructions.
+
 ## License
 
 Open source – modify, extend, and redistribute freely.

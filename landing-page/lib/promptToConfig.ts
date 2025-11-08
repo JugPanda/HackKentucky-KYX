@@ -89,6 +89,53 @@ function pickFallback(prompt: string, fallbackList: string[]): string {
   return fallbackList[Math.floor(Math.random() * fallbackList.length)];
 }
 
+function generateRoomLayouts(difficulty: string, roomCount: number = 5) {
+  const rooms = [];
+  
+  for (let i = 0; i < roomCount; i++) {
+    const platformCount = difficulty === "nightmare" ? 3 + Math.floor(Math.random() * 2) : 4 + Math.floor(Math.random() * 3);
+    const platforms = [];
+    const enemyCount = difficulty === "rookie" ? 1 : difficulty === "nightmare" ? 2 + Math.floor(Math.random() * 2) : 1 + Math.floor(Math.random() * 2);
+    const enemies = [];
+    
+    // Generate platforms with varied layouts
+    for (let j = 0; j < platformCount; j++) {
+      const x = 60 + Math.random() * 640;
+      const y = 250 + Math.random() * 250;
+      const width = 120 + Math.random() * 180;
+      const height = 18 + Math.random() * 16;
+      
+      platforms.push({
+        x: Math.round(x),
+        y: Math.round(y),
+        width: Math.round(width),
+        height: Math.round(height),
+      });
+    }
+    
+    // Sort platforms by y position (top to bottom)
+    platforms.sort((a, b) => b.y - a.y);
+    
+    // Generate enemies on platforms
+    for (let k = 0; k < enemyCount; k++) {
+      const platformIdx = Math.floor(Math.random() * platforms.length);
+      const platform = platforms[platformIdx];
+      const enemyX = platform.x + platform.width / 2;
+      const enemyY = platform.y - 18;
+      
+      enemies.push({
+        x: Math.round(enemyX),
+        y: Math.round(enemyY),
+        speed: difficulty === "rookie" ? 0.95 : difficulty === "nightmare" ? 1.5 : 1.2,
+      });
+    }
+    
+    rooms.push({ platforms, enemies });
+  }
+  
+  return rooms;
+}
+
 export function generateConfigFromPrompt(prompt: string) {
   const tone = matchKeyword(prompt, toneKeywords) ?? "hopeful";
   const difficulty = matchKeyword(prompt, difficultyKeywords) ?? "veteran";
@@ -103,6 +150,9 @@ export function generateConfigFromPrompt(prompt: string) {
 
   const trimmedPrompt = prompt.trim();
   const subtitle = trimmedPrompt.slice(0, 140) || "Player-authored KYX story";
+
+  // Generate procedural rooms based on difficulty
+  const rooms = generateRoomLayouts(difficulty);
 
   return {
     story: {
@@ -130,5 +180,12 @@ export function generateConfigFromPrompt(prompt: string) {
       enemyBaseSpeed: difficulty === "rookie" ? 0.95 : difficulty === "nightmare" ? 1.35 : 1.2,
     },
     colors: palette,
+    rooms,
+    mechanics: {
+      enableDash: true,
+      enableSprint: true,
+      enableDoubleJump: difficulty === "heroic" || tone === "heroic",
+      enableWallJump: false,
+    },
   };
 }

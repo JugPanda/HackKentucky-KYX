@@ -1,11 +1,12 @@
 # Project Index
 
-_Last updated: 2025-11-08 (UTC)_
+_Last updated: 2025-11-08_
 
 ## Snapshot
-- `demo-game/` contains the Hollow Knight-inspired pygame-ce platformer with sprint/dash, dust FX, parallax art, and asynchronous pygbag loop. Story/tuning values now load from `demo-game/game_config.json`.
-- `landing-page/` is the Next.js 14 marketing site + Madlib lab. It embeds the pygbag build (copied into `landing-page/public/demo-game/`) so visitors can play the Python demo inside the site.
-- Root docs (`README.md`, `notes.txt`, this index) describe how the Python game and Next.js site work together; `requirements.txt` pins pygame-ce + pygbag.
+- `demo-game/` contains the Hollow Knight-inspired pygame-ce platformer with sprint/dash, dust FX, parallax art, and asynchronous pygbag loop. Story/tuning values now load from `demo-game/game_config.json`. Rooms and enemies can be configured via JSON.
+- `landing-page/` is the Next.js 14 application with full community platform features: user authentication, game creation with AI, async build queue, community pages, dashboard, and moderation tools.
+- **NEW**: Complete community platform with Supabase backend (auth, database, storage), publish/unpublish workflows, and content moderation.
+- Root docs (`README.md`, `SETUP.md`, `ARCHITECTURE.md`, `notes.txt`, this index) describe the complete system.
 - Generated folders (`demo-game/build/web-cache`, `demo-game/__pycache__`, `landing-page/.next/`) are safe to delete/regenerate.
 
 ## Directory Tree

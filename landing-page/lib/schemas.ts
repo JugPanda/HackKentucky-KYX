@@ -1,5 +1,75 @@
 import { z } from "zod";
 
+// Platform definition
+const platformSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+  width: z.number(),
+  height: z.number(),
+});
+
+// Room definition with platforms
+const roomSchema = z.object({
+  platforms: z.array(platformSchema),
+  enemies: z
+    .array(
+      z.object({
+        x: z.number(),
+        y: z.number(),
+        speed: z.number().optional(),
+        health: z.number().optional(),
+      })
+    )
+    .optional(),
+});
+
+// Full game config schema
+export const gameConfigSchema = z.object({
+  story: z.object({
+    title: z.string().min(2).max(80),
+    leadName: z.string().min(2).max(60),
+    codename: z.string().min(2).max(30),
+    rivalName: z.string().min(2).max(60),
+    hubName: z.string().min(2).max(80),
+    hubDescription: z.string().min(20).max(400),
+    goal: z.string().min(10).max(160),
+    tone: z.enum(["hopeful", "gritty", "heroic"]),
+    difficulty: z.enum(["rookie", "veteran", "nightmare"]),
+    gameOverTitle: z.string().max(60),
+    gameOverMessage: z.string().max(200),
+    instructions: z.array(z.string()).optional(),
+  }),
+  tuning: z.object({
+    playerMaxHealth: z.number().min(1).max(10),
+    runMultiplier: z.number().min(1).max(3),
+    dashSpeed: z.number().min(8).max(25),
+    enemyBaseSpeed: z.number().min(0.5).max(3),
+    gravity: z.number().optional(),
+    jumpPower: z.number().optional(),
+    dashCooldown: z.number().optional(),
+  }),
+  colors: z
+    .object({
+      accent: z.string(),
+      hud: z.string(),
+      backgroundTop: z.string(),
+      backgroundBottom: z.string(),
+    })
+    .optional(),
+  rooms: z.array(roomSchema).optional(),
+  mechanics: z
+    .object({
+      enableDash: z.boolean().optional(),
+      enableSprint: z.boolean().optional(),
+      enableDoubleJump: z.boolean().optional(),
+      enableWallJump: z.boolean().optional(),
+    })
+    .optional(),
+});
+
+export type GameConfig = z.infer<typeof gameConfigSchema>;
+
+// Legacy madlib schema for backward compatibility
 export const madlibSchema = z.object({
   survivorName: z.string().min(2).max(60),
   codename: z.string().min(2).max(30),

@@ -99,6 +99,16 @@ def color_from_config(key: str, fallback):
             return fallback
     return fallback
 
+
+def load_rooms_from_config():
+    """Load rooms from config or return default rooms. Defined later after Platform/Room classes."""
+    return None  # Placeholder, actual implementation below after class definitions
+
+
+def load_enemies_from_config(rooms):
+    """Load enemies from config or create default enemies. Defined later after Enemy class."""
+    return None  # Placeholder, actual implementation below after class definitions
+
 # Constants
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
@@ -909,6 +919,108 @@ class Enemy:
                 return p
         return None
 
+
+# Room and enemy loading functions (implementation)
+def get_default_rooms():
+    """Return default room layouts."""
+    return [
+        # Room 0 - Progressive path
+        Room([
+            Platform(80, 480, 240, 32),
+            Platform(500, 450, 180, 25),
+            Platform(120, 400, 200, 28),
+            Platform(600, 350, 160, 22),
+            Platform(200, 300, 140, 20),
+        ]),
+        # Room 1 - Zigzag pattern
+        Room([
+            Platform(100, 480, 220, 30),
+            Platform(580, 450, 250, 33),
+            Platform(50, 400, 120, 18),
+            Platform(500, 350, 190, 26),
+            Platform(150, 300, 130, 19),
+        ]),
+        # Room 2 - Staircase
+        Room([
+            Platform(60, 500, 230, 31),
+            Platform(120, 400, 100, 15),
+            Platform(200, 300, 280, 34),
+            Platform(580, 250, 150, 21),
+        ]),
+        # Room 3 - Circular spread
+        Room([
+            Platform(350, 480, 260, 32),
+            Platform(50, 450, 120, 18),
+            Platform(650, 450, 180, 24),
+            Platform(120, 400, 220, 29),
+            Platform(250, 350, 190, 25),
+            Platform(400, 300, 200, 26),
+        ]),
+        # Room 4 - Mixed pattern
+        Room([
+            Platform(80, 500, 230, 31),
+            Platform(560, 480, 250, 33),
+            Platform(150, 450, 110, 17),
+            Platform(600, 420, 210, 29),
+            Platform(220, 300, 280, 34),
+        ]),
+    ]
+
+
+def _load_rooms_from_config_impl():
+    """Load rooms from config or return default rooms."""
+    rooms_data = GAME_CONFIG.get("rooms")
+    
+    if not rooms_data or not isinstance(rooms_data, list):
+        return get_default_rooms()
+    
+    # Load rooms from config
+    rooms = []
+    for room_data in rooms_data:
+        platforms_data = room_data.get("platforms", [])
+        platforms = []
+        for p in platforms_data:
+            if all(k in p for k in ("x", "y", "width", "height")):
+                platforms.append(Platform(p["x"], p["y"], p["width"], p["height"]))
+        if platforms:  # Only add room if it has platforms
+            rooms.append(Room(platforms))
+    
+    return rooms if rooms else get_default_rooms()
+
+
+def _load_enemies_from_config_impl(rooms):
+    """Load enemies from config or create default enemies."""
+    rooms_data = GAME_CONFIG.get("rooms")
+    enemies_by_room = []
+    
+    for i, room in enumerate(rooms):
+        room_enemies = []
+        
+        # Try to load enemies from config
+        if rooms_data and i < len(rooms_data):
+            room_data = rooms_data[i]
+            enemies_data = room_data.get("enemies", [])
+            
+            for enemy_data in enemies_data:
+                if "x" in enemy_data and "y" in enemy_data:
+                    speed = enemy_data.get("speed", ENEMY_BASE_SPEED)
+                    room_enemies.append(Enemy(enemy_data["x"], enemy_data["y"], speed=speed))
+        
+        # If no enemies in config, create default enemy
+        if not room_enemies:
+            if room.platforms:
+                p = room.platforms[0]
+                ex = p.x + p.width / 2
+                ey = p.y - 18
+            else:
+                ex = WINDOW_WIDTH / 2
+                ey = GROUND_LEVEL - 18
+            room_enemies.append(Enemy(ex, ey))
+        
+        enemies_by_room.append(room_enemies)
+    
+    return enemies_by_room
+
 # Main async function for pygbag compatibility
 async def main():
     # Set up the display
@@ -920,66 +1032,12 @@ async def main():
     player = Player(WINDOW_WIDTH / 2, GROUND_LEVEL - 30)
     game_over = False
     
-    # Create rooms with different platform layouts
-    # All platforms are nicely spread out with varied sizes and no stacking
-    rooms = [
-        # Room 0 - Progressive path with varied sizes (reduced)
-        Room([
-            Platform(80, 480, 240, 32),    # Starting platform (large, left)
-            Platform(500, 450, 180, 25),   # Medium-large platform (middle-right)
-            Platform(120, 400, 200, 28),   # Large platform (left-middle)
-            Platform(600, 350, 160, 22),   # Medium platform (right side)
-            Platform(200, 300, 140, 20),   # Medium platform (left-middle)
-        ]),
-        # Room 1 - Zigzag pattern with varied sizes (reduced)
-        Room([
-            Platform(100, 480, 220, 30),   # Starting platform (large, left-middle)
-            Platform(580, 450, 250, 33),   # Very large platform (right side)
-            Platform(50, 400, 120, 18),    # Small-medium platform (far left)
-            Platform(500, 350, 190, 26),  # Large platform (middle-right)
-            Platform(150, 300, 130, 19),   # Medium platform (left-middle)
-        ]),
-        # Room 2 - Staircase with varied sizes (reduced)
-        Room([
-            Platform(60, 500, 230, 31),    # Starting platform (large, far left)
-            Platform(120, 400, 100, 15),    # Small platform (left-middle)
-            Platform(200, 300, 280, 34),   # Very large platform (middle-left)
-            Platform(580, 250, 150, 21),   # Medium platform (right side)
-        ]),
-        # Room 3 - Circular spread with varied sizes (reduced)
-        Room([
-            Platform(350, 480, 260, 32),   # Starting platform (very large, center)
-            Platform(50, 450, 120, 18),    # Small-medium platform (far left)
-            Platform(650, 450, 180, 24),   # Medium-large platform (right side)
-            Platform(120, 400, 220, 29),   # Large platform (left side)
-            Platform(250, 350, 190, 25),   # Large platform (middle-left)
-            Platform(400, 300, 200, 26),   # Large platform (center)
-        ]),
-        # Room 4 - Mixed pattern with varied sizes (reduced)
-        Room([
-            Platform(80, 500, 230, 31),    # Starting platform (large, far left)
-            Platform(560, 480, 250, 33),   # Very large platform (right side)
-            Platform(150, 450, 110, 17),    # Small platform (left-middle)
-            Platform(600, 420, 210, 29),   # Large platform (right side)
-            Platform(220, 300, 280, 34),   # Very large platform (middle-left)
-        ]),
-    ]
+    # Load rooms and enemies from config (or defaults)
+    rooms = _load_rooms_from_config_impl()
+    enemies_by_room = _load_enemies_from_config_impl(rooms)
     
     # Current room index
     current_room = 0
-    # Create simple enemies per room (place on first platform if available, otherwise on ground)
-    enemies_by_room = []
-    for room in rooms:
-        room_enemies = []
-        if room.platforms:
-            p = room.platforms[0]
-            ex = p.x + p.width / 2
-            ey = p.y - 18  # place on top of platform
-        else:
-            ex = WINDOW_WIDTH / 2
-            ey = GROUND_LEVEL - 18
-        room_enemies.append(Enemy(ex, ey))
-        enemies_by_room.append(room_enemies)
     
     # Font for instructions
     font = pygame.font.Font(None, 24)
