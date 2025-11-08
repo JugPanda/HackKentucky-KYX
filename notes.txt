@@ -1,0 +1,33 @@
+# Development Notes
+
+## 1. Player Combat & Survivability (`main.py`)
+- Added `PLAYER_MAX_HEALTH` constant and extended `Player` with health, invulnerability timer, and `take_damage` routine.
+- Movement logic now respects `alive` state; controls lock after death but gravity still resolves for a brief fall.
+- Damage flashes the player sprite white and applies knockback plus hop feedback when hurt.
+- Health HUD text renders in the top-right corner alongside the existing instruction list.
+- Game-over overlay (semi-transparent fade with title + hint) appears once health reaches zero to provide clear failure feedback.
+
+## 2. Enemy Awareness & Attacks (`main.py`)
+- Replaced the static bump mechanic with contact damage that consumes player health unless you stomp enemies from above.
+- Enemy updates now receive the player reference so they can aim knockback direction and state logic accordingly.
+- Added attack cooldowns, timers, and ranged checks so enemies “charge” only when close enough, otherwise staying in patrol mode.
+
+## 3. Enemy Navigation & Jumping AI (`main.py`)
+- Introduced `random`-driven patrol timers so idle enemies occasionally change direction even without the player nearby.
+- Added state machine (`patrol`, `chase`, `attack`) dictating movement speeds and direction overrides.
+- Enemies now detect platform edges, remember the platform they occupy, and will jump off edges or toward higher platforms/players when needed (`_maybe_jump`, `_near_platform_edge`).
+- Gravity/collision updates clamp enemies to ground level if they fall, keeping them roaming across the whole map.
+- Instruction HUD updated to warn players that enemies can chase and jump.
+
+## 4. Verification
+- Ran `python3 -m py_compile main.py` after each feature batch to ensure syntax correctness since interactive gameplay testing isn’t available in this environment.
+
+## 5. Enemy Movement Polish
+- Added horizontal acceleration/velocity tracking so AI no longer snaps to their target speed; this removes jitter while keeping motion responsive.
+- Boundary handling now clamps enemies gently at screen edges and zeros horizontal velocity to avoid visible warps.
+- Patrol logic consults platform edge proximity (with configurable padding) before turning, and random direction flips only occur while grounded.
+- Jump helper clears platform references whenever an enemy leaps, preventing stale data that previously caused erratic edge behavior.
+
+## 6. Jump Collision Fixes
+- Enemy movement now resolves horizontal and vertical collisions separately (mirroring the player logic), so when an enemy jumps and brushes a platform edge it no longer gets teleported sideways.
+- Added historical position checks for vertical impacts to determine whether the enemy landed on top, hit from below, or just grazed the side, ensuring consistent placement after jumps.

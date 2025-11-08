@@ -1,189 +1,69 @@
 # Project Index
 
-This document provides a comprehensive index of all files in the HackKentucky-KYX project.
+_Last updated: 2025-11-08 (UTC)_
 
-## Project Overview
+## Snapshot
+- Core gameplay lives in `main.py` (492 lines): a pygame-ce multi-room platformer with async game loop, platform/enemy classes, wraparound room transitions, and pygbag compatibility.
+- `index.html` (821 lines) is a Bottle Episodes mod-creator UI with a dark gradient layout, live JSON builder, validation, and download helpers for the sample `example_mod.json`.
+- `build/` holds the pygbag export pipeline (version `0.9.2`), including the generated web bundle plus an Android APK and accompanying cache blobs.
+- Documentation (`README.md`, `INDEX.md`) and dependency pinning (`requirements.txt`) live at the repo root alongside `.gitignore` rules.
+- Generated folders (`build/web-cache`, `__pycache__/`) are safe to delete before rebuilding or committing.
 
-This repository contains multiple game projects:
-- A 16-bit style 2D platformer game
-- A multi-room platformer game with room transitions
-- A web-based mod creator interface for "Bottle Episodes" zombie game
-
----
-
-## File Index
-
-### Core Game Files
-
-#### `main.py`
-- **Type**: Python script
-- **Description**: Main entry point for a 16-bit style 2D platformer game
-- **Technology**: pygame-ce, pygbag
-- **Features**:
-  - Player movement with physics (left/right, jump)
-  - Multiple platforms with collision detection
-  - 16-bit inspired pixel art graphics
-  - Gravity and friction mechanics
-  - Web-ready with pygbag support
-- **Controls**: Arrow Keys/WASD (move), Space/Up/W (jump), ESC (quit)
-- **Lines**: 305
-
-#### `Hack Game run 1.py`
-- **Type**: Python script
-- **Description**: Multi-room platformer game with room transitions
-- **Technology**: pygame
-- **Features**:
-  - Player with advanced physics (variable jump height, friction)
-  - Multiple rooms (5 rooms) with different platform layouts
-  - Room transitions when walking off screen edges
-  - Ground collision and platform collision detection
-  - Visual feedback (velocity indicators, on-ground indicators)
-- **Controls**: WASD/Arrow Keys (move), Space/Up (jump)
-- **Lines**: 373
-
----
-
-### Web Interface
-
-#### `index.html`
-- **Type**: HTML file
-- **Description**: Web-based mod creator interface for "Bottle Episodes" zombie game
-- **Features**:
-  - Tabbed interface (Game Settings, Characters, Environment, Items)
-  - Real-time JSON generation
-  - Form-based mod configuration
-  - JSON validation and download
-  - Character preview
-  - Modern dark theme UI with gradient backgrounds
-- **Technology**: HTML5, CSS3, JavaScript (vanilla)
-- **Lines**: 822
-
----
-
-### Configuration Files
-
-#### `requirements.txt`
-- **Type**: Python dependencies file
-- **Description**: Lists Python package dependencies
-- **Dependencies**:
-  - `pygame-ce>=2.3.0` - Community Edition of pygame
-  - `pygbag>=0.6.0` - For web deployment of pygame games
-- **Notes**: Includes instructions about uninstalling original pygame before installing pygame-ce
-
-#### `example_mod.json`
-- **Type**: JSON configuration file
-- **Description**: Example mod configuration for the "Bottle Episodes" game
-- **Content**: 
-  - Mod info (name, description, version, author)
-  - Game settings (difficulty, resources, spawn rates)
-  - Player configuration (stats, abilities, color)
-  - Environment settings (map, time of day, weather, hazards)
-  - Items configuration (starting inventory, crafting)
-- **Example Mod**: "Shadow Runner Mod (Shadow Runner theme)"
-
----
-
-### Documentation
-
-#### `README.md`
-- **Type**: Markdown documentation
-- **Description**: Main project documentation for the 16-bit platformer game
-- **Contents**:
-  - Project overview and features
-  - Installation instructions (pygame-ce vs pygame)
-  - Running instructions (local and web)
-  - Controls and game mechanics
-  - Project structure
-  - Customization guide
-  - Future feature suggestions
-- **Lines**: 111
-
-#### `INDEX.md` (this file)
-- **Type**: Markdown documentation
-- **Description**: Comprehensive index of all project files
-- **Purpose**: Quick reference for project structure and file purposes
-
----
-
-### Version Control
-
-#### `.gitignore`
-- **Type**: Git ignore rules
-- **Description**: Specifies files and directories to ignore in version control
-- **Ignores**:
-  - Python cache files (`__pycache__/`, `*.pyc`)
-  - Virtual environments (`venv/`, `env/`)
-  - IDE files (`.vscode/`, `.idea/`)
-  - OS files (`.DS_Store`, `Thumbs.db`)
-  - Build artifacts (`build/`, `web/`, `*.wasm`, `*.data`)
-
----
-
-## Project Structure
-
+## Directory Tree
 ```
 HackKentucky-KYX/
-├── main.py                 # 16-bit platformer game
-├── Hack Game run 1.py      # Multi-room platformer game
-├── index.html              # Mod creator web interface
-├── example_mod.json        # Example mod configuration
-├── requirements.txt        # Python dependencies
-├── README.md              # Main documentation
-├── INDEX.md               # This file (project index)
-└── .gitignore             # Git ignore rules
+├── main.py
+├── index.html
+├── example_mod.json
+├── requirements.txt
+├── README.md
+├── INDEX.md
+├── .gitignore
+├── build/
+│   ├── version.txt
+│   ├── web/
+│   │   ├── favicon.png
+│   │   ├── hackkentucky-kyx.apk
+│   │   └── index.html
+│   └── web-cache/
+│       └── hashed *.data / *.head / *.tmpl chunks from pygbag
+├── __pycache__/
+│   └── main.cpython-312.pyc
+└── .git/
 ```
 
----
+## File Details
+
+### Gameplay Code
+- `main.py` – Async `asyncio.run(main())` entry point that sets up the pygame window, `Room`/`Platform` layout definitions (5 rooms), and `Player` plus simple patrolling `Enemy` AI. Supports WASD/arrow movement, variable jump heights, friction, stomp/bounce logic, HUD text, and looping room transitions for both desktop and web builds.
+
+### Web & Modding Tools
+- `index.html` – Single-page tool for creating Bottle Episodes mods. Includes CSS for a frosted-glass dark UI, form sections for game settings, characters, environment, and items, a live JSON preview pane, copy/download buttons, and color pickers. Runs fully client-side (vanilla JS).
+- `example_mod.json` – Sample “Shadow Runner Mod” payload showing the JSON schema produced by the web tool (metadata, stats, environment, inventory, hazards, and crafting flags).
+
+### Build Outputs
+- `build/version.txt` – Tracks the current pygbag export version (`0.9.2`) for the produced assets.
+- `build/web/` – The distributable bundle created by `pygbag main.py`, containing the WASM-ready HTML shell plus an `hackkentucky-kyx.apk` mobile package and favicon.
+- `build/web-cache/` – Hashed `.data`, `.head`, and `.tmpl` chunks written by pygbag’s caching layer; regenerate by rerunning the build.
+
+### Documentation & Configuration
+- `README.md` (123 lines) – Primary setup and usage guide: highlights pygame-ce requirements, install steps, local/web run commands, control scheme, and customization knobs.
+- `INDEX.md` – This living document that inventories every file/folder for quick onboarding.
+- `requirements.txt` – Python dependency pins (`pygame-ce>=2.3.0`, `pygbag>=0.6.0`) plus reminders to remove vanilla pygame to avoid conflicts.
+- `.gitignore` – Filters out Python caches, virtualenvs, editor junk, OS files, and pygbag artifacts (`build/`, `web/`, `*.wasm`, `*.data`).
+
+### Generated Artifacts
+- `build/web-cache/` – Recreated whenever pygbag stages assets; safe to clean if space is needed.
+- `__pycache__/main.cpython-312.pyc` – CPython bytecode from the most recent local run.
+- `.git/` – Local repository metadata (logs, refs, hooks).
 
 ## Quick Reference
-
-### Running the Games
-
-**16-bit Platformer:**
-```bash
-python main.py
-```
-
-**Multi-room Platformer:**
-```bash
-python "Hack Game run 1.py"
-```
-
-**Web Mod Creator:**
-- Open `index.html` in a web browser
-
-### Installing Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-**Note**: If you have the original `pygame` installed, uninstall it first:
-```bash
-pip uninstall pygame
-pip install pygame-ce
-```
+- Run the platformer locally: `python main.py`
+- Build for the web (outputs to `build/`): `pygbag main.py`
+- Launch the mod creator: open `index.html` in any modern browser
+- Install dependencies: `pip install -r requirements.txt` (after uninstalling vanilla `pygame` if present)
 
 ---
 
-## File Statistics
-
-- **Total Python Files**: 2
-- **Total HTML Files**: 1
-- **Total JSON Files**: 1
-- **Total Markdown Files**: 2
-- **Total Configuration Files**: 2 (.gitignore, requirements.txt)
-
----
-
-## Notes
-
-- The project uses **pygame-ce** (Community Edition) instead of the original pygame
-- Both Python games are platformers but with different mechanics and features
-- The `index.html` file is a standalone web application (no server required)
-- The `example_mod.json` demonstrates the expected format for mod configurations
-
----
-
-*Last updated: Generated automatically*
+Use this index as the jumping-off point before editing gameplay code, tweaking the web tool, or pruning build artifacts.
 
