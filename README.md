@@ -1,15 +1,16 @@
-# 16-bit Style 2D Platformer
+# Multi-Room Platformer Game
 
-A retro-style 2D platformer game built with pygame-ce and pygbag, featuring classic 16-bit inspired graphics and smooth platforming mechanics.
+A 2D platformer game built with pygame-ce and pygbag, featuring multiple rooms, smooth physics, and web compatibility.
 
 ## Features
 
-- Classic 16-bit style pixel art graphics
-- Smooth player movement with physics
-- Jump mechanics with gravity
-- Multiple platforms to navigate
-- Collision detection
+- Multi-room gameplay with seamless transitions
+- Smooth player movement with advanced physics
+- Variable jump height (hold jump to jump higher)
+- Multiple platform layouts across 5 different rooms
+- Precise collision detection
 - Web-ready with pygbag support
+- Room transitions when walking off screen edges
 
 ## Requirements
 
@@ -60,20 +61,30 @@ To build and run the game in a web browser:
 pygbag main.py
 ```
 
-This will start a local server and open the game in your browser. The game will be accessible at `http://localhost:8000`
+This will:
+1. Compile the game to WebAssembly
+2. Start a local server
+3. Open the game in your browser at `http://localhost:8000`
+
+**Note**: The game is now async-compatible for web deployment. The code uses `asyncio` to ensure smooth operation in the browser.
+
+For production deployment, you can build the game and host the generated files on any web server.
 
 ## Controls
 
 - **Arrow Keys** or **WASD**: Move left/right
-- **Space** or **Up Arrow** or **W**: Jump
-- **ESC**: Quit game
+- **Space** or **Up Arrow**: Jump (hold to jump higher)
+- **Walk off screen edges**: Transition between rooms
+- **Close window**: Quit game
 
 ## Game Mechanics
 
 - **Gravity**: Player falls naturally when not on a platform
-- **Jumping**: Press space to jump when on the ground
+- **Variable Jump**: Hold jump button to jump higher (variable jump height)
 - **Movement**: Smooth horizontal movement with friction
 - **Collision**: Precise collision detection with platforms
+- **Room System**: 5 different rooms with unique platform layouts
+- **Room Transitions**: Walk off the left or right edge to move between rooms
 
 ## Project Structure
 
@@ -88,11 +99,13 @@ This will start a local server and open the game in your browser. The game will 
 
 You can easily customize the game by modifying constants in `main.py`:
 
-- `SCREEN_WIDTH` / `SCREEN_HEIGHT`: Game window size
+- `WINDOW_WIDTH` / `WINDOW_HEIGHT`: Game window size
 - `GRAVITY`: How fast the player falls
-- `JUMP_STRENGTH`: How high the player jumps
+- `jump_power` / `initial_jump_power`: Jump height settings
 - `PLAYER_SPEED`: Horizontal movement speed
+- `FRICTION`: Ground friction coefficient
 - Colors: Modify the color constants for different palettes
+- Rooms: Add or modify room layouts in the `rooms` list
 
 ## Adding More Features
 

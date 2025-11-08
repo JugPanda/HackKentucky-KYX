@@ -1,6 +1,10 @@
+"""
+Multi-Room Platformer Game
+Web-compatible with pygbag
+"""
 
 import pygame
-import sys
+import asyncio
 
 # Initialize Pygame
 pygame.init()
@@ -251,8 +255,8 @@ class Player:
                 3
             )
 
-# Main function
-def main():
+# Main async function for pygbag compatibility
+async def main():
     # Set up the display
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     pygame.display.set_caption("WASD Movement with Gravity - Multi-Room")
@@ -363,11 +367,12 @@ def main():
         
         # Update display
         pygame.display.flip()
+        
+        # Use async sleep for web compatibility
+        await asyncio.sleep(0)
         clock.tick(FPS)
-    
-    # Quit
-    pygame.quit()
-    sys.exit()
 
 if __name__ == "__main__":
-    main() 
+    # For local testing, use asyncio.run()
+    # When running with pygbag, it will handle async execution automatically
+    asyncio.run(main()) 
