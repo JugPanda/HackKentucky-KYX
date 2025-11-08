@@ -1,0 +1,58 @@
+{
+  "modInfo": {
+    "name": "Shadow Runner Mod",
+    "description": "A dark and challenging survival experience with enhanced abilities.",
+    "version": "1.0.0",
+    "author": "Bottle Episodes Mod Creator"
+  },
+  "gameSettings": {
+    "difficulty": "hard",
+    "startingResources": 50,
+    "zombieSpawnRate": 20,
+    "friendlyFire": true,
+    "permaDeath": true
+  },
+  "player": {
+    "name": "Shadow Runner",
+    "class": "scout",
+    "stats": {
+      "health": 80,
+      "speed": 6.5,
+      "stamina": 150
+    },
+    "color": "#9b59b6",
+    "abilities": [
+      "Shadow Step",
+      "Night Vision",
+      "Silent Movement"
+    ]
+  },
+  "environment": {
+    "mapName": "Darkened Ruins",
+    "timeOfDay": "night",
+    "weather": "fog",
+    "ambientColor": "#1a1a2e",
+    "hazards": [
+      "Toxic Fog",
+      "Unstable Structures"
+    ]
+  },
+  "items": {
+    "startingInventory": [
+      {
+        "name": "Stealth Cloak",
+        "quantity": 1
+      },
+      {
+        "name": "Night Vision Goggles",
+        "quantity": 1
+      },
+      {
+        "name": "Energy Bar",
+        "quantity": 5
+      }
+    ],
+    "craftingEnabled": true,
+    "craftingDifficulty": "hard"
+  }
+}
