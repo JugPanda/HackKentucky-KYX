@@ -470,31 +470,22 @@ export default function MadlibLabPage() {
                 <p className="text-lg font-semibold text-white">Your Game Preview</p>
                 <div className="overflow-hidden rounded-2xl border border-slate-800/70">
                   <div className="h-52 w-full bg-slate-900/70">
-                    {imagePreview || formData.safehouseImage ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={imagePreview || formData.safehouseImage}
-                        alt="Hub preview"
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div 
-                        className="flex h-full items-center justify-center text-sm"
-                        style={{
-                          background: formData.tone === "hopeful" 
-                            ? "linear-gradient(135deg, #065f46 0%, #10b981 100%)"
-                            : formData.tone === "gritty"
-                            ? "linear-gradient(135deg, #1f2937 0%, #4b5563 100%)"
-                            : "linear-gradient(135deg, #92400e 0%, #f59e0b 100%)",
-                        }}
-                      >
-                        <div className="text-center text-white/80">
-                          <p className="text-3xl mb-2">🎮</p>
-                          <p className="text-sm font-semibold">{formData.survivorName || "Your Hero"}</p>
-                          <p className="text-xs opacity-75">vs {formData.nemesisName || "The Enemy"}</p>
-                        </div>
+                    <div 
+                      className="flex h-full items-center justify-center text-sm"
+                      style={{
+                        background: formData.tone === "hopeful" 
+                          ? "linear-gradient(135deg, #065f46 0%, #10b981 100%)"
+                          : formData.tone === "gritty"
+                          ? "linear-gradient(135deg, #1f2937 0%, #4b5563 100%)"
+                          : "linear-gradient(135deg, #92400e 0%, #f59e0b 100%)",
+                      }}
+                    >
+                      <div className="text-center text-white/80">
+                        <p className="text-3xl mb-2">🎮</p>
+                        <p className="text-sm font-semibold">{formData.survivorName || "Your Hero"}</p>
+                        <p className="text-xs opacity-75">vs {formData.nemesisName || "The Enemy"}</p>
                       </div>
-                    )}
+                    </div>
                   </div>
                   <div className="space-y-3 border-t border-slate-800/70 bg-[#0b1018] px-5 py-4">
                     <div className="flex items-center justify-between">
