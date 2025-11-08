@@ -65,7 +65,7 @@ export default function HomePage() {
                   Create Your Own Platformer Game
                 </h1>
                 <p className="max-w-2xl text-lg text-slate-300">
-                  Describe your game idea in plain English, and we'll turn it into a playable platformer. 
+                  Describe your game idea in plain English, and we&apos;ll turn it into a playable platformer. 
                   Share it with friends or publish it for the community to play.
                 </p>
                 <div className="rounded-2xl border border-slate-800/70 bg-slate-950/40 p-5 text-sm text-slate-300">
@@ -134,7 +134,7 @@ export default function HomePage() {
                   How It Works
                 </h2>
                 <p className="text-slate-400">
-                  Creating your game is simple - just describe what you want and we'll handle the rest.
+                  Creating your game is simple - just describe what you want and we&apos;ll handle the rest.
                 </p>
               </div>
               <div className="mt-8 grid gap-6 md:grid-cols-3">
@@ -157,7 +157,7 @@ export default function HomePage() {
               No Coding Required
             </h2>
             <p className="text-slate-400 max-w-2xl mx-auto">
-              Anyone can create a platformer game. Just describe your idea, customize a few settings, and you're done!
+              Anyone can create a platformer game. Just describe your idea, customize a few settings, and you&apos;re done!
             </p>
           </div>
         </section>

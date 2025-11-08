@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState, useEffect, type ChangeEvent } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, UploadCloud } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   defaultMadlibPayload,
-  MadlibApiResponse,
   MadlibPayload,
 } from "@/lib/schemas";
 import { createClient } from "@/lib/supabase/client";
@@ -67,12 +66,9 @@ export default function MadlibLabPage() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [formData, setFormData] = useState<MadlibPayload>(defaultMadlibPayload);
   const [imagePreview, setImagePreview] = useState<string>("");
-  const [serverResponse, setServerResponse] = useState<MadlibApiResponse | null>(null);
-  const [status, setStatus] = useState<StatusState>(initialStatus);
   const [promptText, setPromptText] = useState("");
   const [promptStatus, setPromptStatus] = useState<StatusState>(initialStatus);
   const [buildStatus, setBuildStatus] = useState<StatusState>(initialStatus);
-  const [buildResult, setBuildResult] = useState<{ slug: string; url: string } | null>(null);
 
   // Check authentication status
   useEffect(() => {
@@ -91,53 +87,11 @@ export default function MadlibLabPage() {
     checkAuth();
   }, []);
 
-  const requestJson = useMemo(() => JSON.stringify(formData, null, 2), [formData]);
-  const responseJson = useMemo(() => {
-    if (!serverResponse) return "// submit to preview the generated JSON";
-    if (!serverResponse.ok) {
-      return JSON.stringify(serverResponse, null, 2);
-    }
-    return JSON.stringify(serverResponse.config, null, 2);
-  }, [serverResponse]);
 
   const updateField = (key: keyof MadlibPayload, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = typeof reader.result === "string" ? reader.result : "";
-      setImagePreview(result);
-      updateField("safehouseImage", result);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleSubmit = async () => {
-    setStatus({ loading: true });
-    setServerResponse(null);
-    try {
-      const res = await fetch("/api/madlib", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      const data: MadlibApiResponse = await res.json();
-      if (!data.ok) {
-        setStatus({ loading: false, error: true, message: data.message || "Validation failed" });
-        setServerResponse(data);
-        return;
-      }
-      setServerResponse(data);
-      setStatus({ loading: false, message: "Template generated" });
-    } catch (error) {
-      console.error(error);
-      setStatus({ loading: false, error: true, message: "Network error" });
-    }
-  };
 
   const applyGeneratedConfig = (config: GeneratedConfig | undefined) => {
     if (!config || !config.story) {
@@ -210,7 +164,7 @@ export default function MadlibLabPage() {
         throw new Error(errorData.error || "Failed to generate game code");
       }
 
-      const { mainPy, config: generatedConfig } = await codeGenRes.json();
+      const { mainPy } = await codeGenRes.json();
       
       setBuildStatus({ loading: true, message: "Creating game entry..." });
 
@@ -272,7 +226,7 @@ export default function MadlibLabPage() {
         
         // Show detailed validation errors if available
         if (errorData.issues) {
-          const issueMessages = errorData.issues.map((issue: any) => 
+          const issueMessages = errorData.issues.map((issue: { path: string[]; message: string }) => 
             `${issue.path.join('.')}: ${issue.message}`
           ).join(', ');
           throw new Error(`Validation error: ${issueMessages}`);
@@ -544,7 +498,7 @@ export default function MadlibLabPage() {
                         <div className="text-center text-white/80">
                           <p className="text-3xl mb-2">🎮</p>
                           <p className="text-sm font-semibold">{formData.survivorName || "Your Hero"}</p>
-                          <p className="text-xs opacity-75">vs {formData.nemesisName || "The Enemy"}</p>
+                          <p className="text-xs opacity-75">vs {formData.nemesisName || &quot;The Enemy&quot;}</p>
                         </div>
                       </div>
                     )}
