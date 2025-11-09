@@ -109,7 +109,7 @@ Guidelines:
       const { generateConfigFromPrompt } = await import("@/lib/promptToConfig");
       const config = generateConfigFromPrompt(prompt);
       return NextResponse.json({ ok: true, config });
-    } catch (fallbackError) {
+    } catch {
       return NextResponse.json(
         { ok: false, message: (error as Error).message },
         { status: 500 },
