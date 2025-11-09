@@ -52,11 +52,15 @@ export default async function GamePage({ params }: PageProps) {
   }
 
   // Check if user can view this game
-  const canView =
-    game.visibility === "public" ||
-    (user && game.user_id === user.id);
+  const isOwner = user && game.user_id === user.id;
+  const canView = game.visibility === "public" || isOwner;
 
   if (!canView) {
+    notFound();
+  }
+
+  // Owner can always view, even if private
+  if (!game.bundle_url && !isOwner) {
     notFound();
   }
 
@@ -84,9 +88,7 @@ export default async function GamePage({ params }: PageProps) {
       )
     `)
     .eq("game_id", game.id)
-    .order("created_at", { ascending: false });
-
-  const isOwner = user && game.user_id === user.id;
+    .order("created_at", { ascending: false});
 
   return (
     <div className="container mx-auto px-4 py-8">

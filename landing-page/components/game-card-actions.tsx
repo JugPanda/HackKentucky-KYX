@@ -24,8 +24,12 @@ export function GameCardActions({ game, profileUsername }: GameCardActionsProps)
 
   // Poll for build status when building
   useEffect(() => {
-    if (game.status !== "building") return;
+    if (game.status !== "building") {
+      setIsBuilding(false);
+      return;
+    }
 
+    setIsBuilding(true);
     let pollCount = 0;
     const maxPolls = 120; // 2 minutes max (120 * 1 second)
 
