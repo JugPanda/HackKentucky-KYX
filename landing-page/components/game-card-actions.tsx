@@ -21,12 +21,15 @@ export function GameCardActions({ game, profileUsername }: GameCardActionsProps)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [buildProgress, setBuildProgress] = useState("Starting build...");
+  const [buildPercent, setBuildPercent] = useState(0);
 
   // Poll for build status when building
   useEffect(() => {
     if (game.status !== "building") {
       // If we just finished building, auto-navigate to game page
       if (isBuilding && game.status === "published" && profileUsername && game.slug) {
+        setBuildPercent(100);
+        setBuildProgress("Build complete! Loading game...");
         setTimeout(() => {
           router.push(`/community/${profileUsername}/${game.slug}`);
         }, 500); // Small delay to show success state
@@ -49,15 +52,21 @@ export function GameCardActions({ game, profileUsername }: GameCardActionsProps)
         return;
       }
 
+      // Calculate progress percentage (estimated 90 seconds for full build)
+      const estimatedProgress = Math.min(95, (pollCount / 90) * 100);
+      setBuildPercent(Math.round(estimatedProgress));
+
       // Update progress message
       if (pollCount < 10) {
+        setBuildProgress("Initializing build environment...");
+      } else if (pollCount < 20) {
         setBuildProgress("Compiling Python game code...");
-      } else if (pollCount < 30) {
-        setBuildProgress("Building WebAssembly...");
-      } else if (pollCount < 60) {
-        setBuildProgress("Uploading game files...");
+      } else if (pollCount < 50) {
+        setBuildProgress("Building WebAssembly modules...");
+      } else if (pollCount < 80) {
+        setBuildProgress("Uploading game files to storage...");
       } else {
-        setBuildProgress("Finishing up...");
+        setBuildProgress("Finalizing and verifying build...");
       }
 
       // Refresh to check status
@@ -70,6 +79,7 @@ export function GameCardActions({ game, profileUsername }: GameCardActionsProps)
   const handleBuild = async () => {
     setIsBuilding(true);
     setBuildProgress("Starting build...");
+    setBuildPercent(0);
     setError(null);
 
     try {
@@ -270,9 +280,22 @@ export function GameCardActions({ game, profileUsername }: GameCardActionsProps)
             </Button>
           </div>
           {showBuildingStatus && (
-            <div className="text-xs text-muted-foreground flex items-center gap-2">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              {buildProgress}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground flex items-center gap-2">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  {buildProgress}
+                </span>
+                <span className="text-muted-foreground font-medium">
+                  {buildPercent}%
+                </span>
+              </div>
+              <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
+                <div 
+                  className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 h-full rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${buildPercent}%` }}
+                />
+              </div>
             </div>
           )}
           {error && (

@@ -2,6 +2,56 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { gameConfigSchema } from "@/lib/schemas";
 
+export async function PATCH(request: Request) {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { gameId, visibility } = await request.json();
+
+    if (!gameId) {
+      return NextResponse.json({ error: "gameId is required" }, { status: 400 });
+    }
+
+    // Verify game ownership
+    const { data: existingGame, error: fetchError } = await supabase
+      .from("games")
+      .select("*")
+      .eq("id", gameId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (fetchError || !existingGame) {
+      return NextResponse.json({ error: "Game not found" }, { status: 404 });
+    }
+
+    // Update visibility
+    const { data: updatedGame, error: updateError } = await supabase
+      .from("games")
+      .update({ visibility })
+      .eq("id", gameId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error("Error updating game visibility:", updateError);
+      return NextResponse.json({ error: "Failed to update game" }, { status: 500 });
+    }
+
+    return NextResponse.json({ game: updatedGame });
+  } catch (error) {
+    console.error("Error in update game visibility:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
 export async function PUT(request: Request) {
   try {
     const supabase = await createClient();
