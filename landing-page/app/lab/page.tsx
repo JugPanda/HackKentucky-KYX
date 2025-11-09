@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -60,18 +60,21 @@ type StatusState = { loading: boolean; message?: string; error?: boolean };
 
 const initialStatus: StatusState = { loading: false };
 
-export default function MadlibLabPage() {
+function MadlibLabPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editGameId = searchParams.get("edit");
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isLoadingGame, setIsLoadingGame] = useState(false);
   const [formData, setFormData] = useState<MadlibPayload>(defaultMadlibPayload);
   const [promptText, setPromptText] = useState("");
   const [promptStatus, setPromptStatus] = useState<StatusState>(initialStatus);
   const [buildStatus, setBuildStatus] = useState<StatusState>(initialStatus);
 
-  // Check authentication status
+  // Check authentication status and load game if editing
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuthAndLoadGame = async () => {
       const supabase = createClient();
       if (!supabase) {
         setIsCheckingAuth(false);
@@ -81,10 +84,54 @@ export default function MadlibLabPage() {
       const { data: { user } } = await supabase.auth.getUser();
       setIsSignedIn(!!user);
       setIsCheckingAuth(false);
+
+      // Load game data if editing
+      if (editGameId && user) {
+        setIsLoadingGame(true);
+        try {
+          const { data: game, error } = await supabase
+            .from("games")
+            .select("*")
+            .eq("id", editGameId)
+            .eq("user_id", user.id)
+            .single();
+
+          if (error || !game) {
+            console.error("Error loading game:", error);
+            router.push("/dashboard");
+            return;
+          }
+
+          // Populate form with game data
+          if (game.config && typeof game.config === "object" && "story" in game.config) {
+            const story = (game.config as any).story;
+            setFormData({
+              survivorName: story.leadName || "",
+              codename: story.codename || "",
+              survivorBio: story.hubDescription || "",
+              nemesisName: story.rivalName || "",
+              safehouseName: story.hubName || "",
+              safehouseDescription: story.hubDescription || "",
+              victoryCondition: story.goal || "",
+              tone: story.tone || "hopeful",
+              difficulty: story.difficulty || "rookie",
+            });
+          }
+
+          // Set description as prompt text
+          if (game.description) {
+            setPromptText(game.description);
+          }
+        } catch (error) {
+          console.error("Error loading game:", error);
+        } finally {
+          setIsLoadingGame(false);
+        }
+      }
     };
     
-    checkAuth();
-  }, []);
+    checkAuthAndLoadGame();
+  }, [editGameId, router]);
 
 
   const updateField = (key: keyof MadlibPayload, value: string) => {
@@ -224,35 +271,73 @@ export default function MadlibLabPage() {
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)/g, "");
 
-      // Step 2: Create the game entry
-      const createRes = await fetch("/api/games/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          slug: slug,
-          title: formData.survivorName || "My Platformer",
-          description: formData.victoryCondition || "A platformer adventure",
-          config: gameConfig,
-          generatedCode: mainPy, // Include AI-generated Python code
-        }),
-      });
+      // Step 2: Create or update the game entry
+      let game;
+      if (editGameId) {
+        // Update existing game
+        setBuildStatus({ loading: true, message: "Updating game..." });
+        const updateRes = await fetch("/api/games/update", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            gameId: editGameId,
+            title: formData.survivorName || "My Platformer",
+            description: formData.victoryCondition || "A platformer adventure",
+            config: gameConfig,
+            generatedCode: mainPy, // Include AI-generated Python code
+          }),
+        });
 
-      if (!createRes.ok) {
-        const errorData = await createRes.json();
-        console.error("Create game error:", errorData);
-        
-        // Show detailed validation errors if available
-        if (errorData.issues) {
-          const issueMessages = errorData.issues.map((issue: { path: string[]; message: string }) => 
-            `${issue.path.join('.')}: ${issue.message}`
-          ).join(', ');
-          throw new Error(`Validation error: ${issueMessages}`);
+        if (!updateRes.ok) {
+          const errorData = await updateRes.json();
+          console.error("Update game error:", errorData);
+          
+          // Show detailed validation errors if available
+          if (errorData.issues) {
+            const issueMessages = errorData.issues.map((issue: { path: string[]; message: string }) => 
+              `${issue.path.join('.')}: ${issue.message}`
+            ).join(', ');
+            throw new Error(`Validation error: ${issueMessages}`);
+          }
+          
+          throw new Error(errorData.error || "Failed to update game");
         }
-        
-        throw new Error(errorData.error || "Failed to create game");
-      }
 
-      const { game } = await createRes.json();
+        const updateData = await updateRes.json();
+        game = updateData.game;
+      } else {
+        // Create new game
+        setBuildStatus({ loading: true, message: "Creating game entry..." });
+        const createRes = await fetch("/api/games/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            slug: slug,
+            title: formData.survivorName || "My Platformer",
+            description: formData.victoryCondition || "A platformer adventure",
+            config: gameConfig,
+            generatedCode: mainPy, // Include AI-generated Python code
+          }),
+        });
+
+        if (!createRes.ok) {
+          const errorData = await createRes.json();
+          console.error("Create game error:", errorData);
+          
+          // Show detailed validation errors if available
+          if (errorData.issues) {
+            const issueMessages = errorData.issues.map((issue: { path: string[]; message: string }) => 
+              `${issue.path.join('.')}: ${issue.message}`
+            ).join(', ');
+            throw new Error(`Validation error: ${issueMessages}`);
+          }
+          
+          throw new Error(errorData.error || "Failed to create game");
+        }
+
+        const createData = await createRes.json();
+        game = createData.game;
+      }
 
       // Step 2: Trigger the build
       setBuildStatus({ loading: true, message: "Building your game..." });
@@ -270,7 +355,7 @@ export default function MadlibLabPage() {
 
       setBuildStatus({ 
         loading: false, 
-        message: "Game created! Redirecting to dashboard..." 
+        message: editGameId ? "Game updated! Redirecting to dashboard..." : "Game created! Redirecting to dashboard..." 
       });
       
       // Redirect to dashboard after a short delay
@@ -301,10 +386,13 @@ export default function MadlibLabPage() {
             <Badge className="border-emerald-500/40 bg-emerald-500/10 text-emerald-100">
               Game Creator
             </Badge>
-            <h1 className="text-4xl font-semibold text-white">Create Your Game</h1>
+            <h1 className="text-4xl font-semibold text-white">
+              {editGameId ? "Edit Your Game" : "Create Your Game"}
+            </h1>
             <p className="text-lg text-slate-300">
-              Describe your game idea and we&apos;ll turn it into a playable platformer. 
-              Sign in to build and share your game with the community!
+              {editGameId 
+                ? "Update your game details and rebuild to see the changes."
+                : "Describe your game idea and we'll turn it into a playable platformer. Sign in to build and share your game with the community!"}
             </p>
           </div>
         </div>
@@ -525,5 +613,17 @@ export default function MadlibLabPage() {
 
       </main>
     </div>
+  );
+}
+
+export default function MadlibLabPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#010409] text-slate-100 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+      </div>
+    }>
+      <MadlibLabPageContent />
+    </Suspense>
   );
 }

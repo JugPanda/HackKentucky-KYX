@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { GameCardActions } from "@/components/game-card-actions";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -86,31 +87,7 @@ export default async function DashboardPage() {
                     <Badge variant="default">{game.visibility}</Badge>
                   </div>
 
-                  <div className="flex gap-2">
-                    {game.status === "draft" && (
-                      <Button size="sm" className="flex-1">
-                        Build
-                      </Button>
-                    )}
-                    {game.status === "built" && game.visibility !== "public" && (
-                      <Button size="sm" className="flex-1">
-                        Publish
-                      </Button>
-                    )}
-                    {game.visibility === "public" && (
-                      <Link
-                        href={`/community/${profile?.username}/${game.slug}`}
-                        className="flex-1"
-                      >
-                        <Button size="sm" variant="outline" className="w-full">
-                          View
-                        </Button>
-                      </Link>
-                    )}
-                    <Button size="sm" variant="ghost">
-                      Edit
-                    </Button>
-                  </div>
+                  <GameCardActions game={game} profileUsername={profile?.username} />
                 </CardContent>
               </Card>
             ))}
