@@ -417,11 +417,13 @@ function MadlibLabPageContent() {
         <Card className="border-slate-800/70 bg-slate-950/40">
           <CardContent className="space-y-4 p-6">
             <div className="flex flex-col gap-2">
-              <p className="text-lg font-semibold text-white">What&apos;s your game about?</p>
-              <p className="text-sm text-slate-400">Describe your game idea in a few sentences</p>
+              <p className="text-lg font-semibold text-white">What&apos;s your game about? ✨</p>
+              <p className="text-sm text-slate-400">
+                Describe your game idea - include genre, characters, setting, and mood. The AI will extract details and fill the form!
+              </p>
               <Textarea
                 rows={4}
-                placeholder="Example: A hero exploring mysterious caves, fighting shadow creatures, and collecting ancient artifacts. The world feels dark but hopeful."
+                placeholder="Example: A horror platformer where Luna the Ghost Hunter explores abandoned mansions, fighting spectral enemies and collecting cursed artifacts. Dark, scary atmosphere with brutal difficulty."
                 value={promptText}
                 onChange={(event) => setPromptText(event.target.value)}
                 className="text-base"
