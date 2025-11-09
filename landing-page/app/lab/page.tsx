@@ -159,11 +159,29 @@ export default function MadlibLabPage() {
       });
 
       if (!codeGenRes.ok) {
-        const errorData = await codeGenRes.json();
-        throw new Error(errorData.error || "Failed to generate game code");
+        let errorMessage = "Failed to generate game code";
+        try {
+          const errorData = await codeGenRes.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // If response isn't JSON, use status text
+          errorMessage = `${errorMessage} (${codeGenRes.status}: ${codeGenRes.statusText})`;
+        }
+        throw new Error(errorMessage);
       }
 
-      const { mainPy } = await codeGenRes.json();
+      let mainPy;
+      try {
+        const data = await codeGenRes.json();
+        mainPy = data.mainPy;
+      } catch (parseError) {
+        console.error("Failed to parse AI response:", parseError);
+        throw new Error("Invalid response from AI service. Please try again.");
+      }
+      
+      if (!mainPy) {
+        throw new Error("AI did not generate game code. Please try again.");
+      }
       
       setBuildStatus({ loading: true, message: "Creating game entry..." });
 
