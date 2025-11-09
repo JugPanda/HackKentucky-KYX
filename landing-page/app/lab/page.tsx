@@ -452,35 +452,38 @@ function MadlibLabPageContent() {
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-semibold text-white mb-2 block">
-                    Hero Name
+                    Hero Name <span className="text-xs text-slate-400 font-normal">(required)</span>
                   </label>
                   <Input
                     placeholder="e.g. Shadow Knight"
                     value={formData.survivorName}
                     onChange={(event) => updateField("survivorName", event.target.value)}
                     className="text-base"
+                    required
                   />
                 </div>
                 <div>
                   <label className="text-sm font-semibold text-white mb-2 block">
-                    Enemy Name
+                    Enemy Name <span className="text-xs text-slate-400 font-normal">(required)</span>
                   </label>
                   <Input
                     placeholder="e.g. Dark Forces"
                     value={formData.nemesisName}
                     onChange={(event) => updateField("nemesisName", event.target.value)}
                     className="text-base"
+                    required
                   />
                 </div>
                 <div>
                   <label className="text-sm font-semibold text-white mb-2 block">
-                    Goal
+                    Goal <span className="text-xs text-slate-400 font-normal">(required)</span>
                   </label>
                   <Input
                     placeholder="e.g. Collect all crystals"
                     value={formData.victoryCondition}
                     onChange={(event) => updateField("victoryCondition", event.target.value)}
                     className="text-base"
+                    required
                   />
                 </div>
               </div>
@@ -579,11 +582,14 @@ function MadlibLabPageContent() {
           <div className="space-y-6">
             <Card className="border-slate-800/70 bg-slate-950/50">
               <CardContent className="space-y-4 p-6">
-                <p className="text-lg font-semibold text-white">Your Game Preview</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-lg font-semibold text-white">Your Game Preview</p>
+                  <p className="text-xs text-slate-400">Updates as you type ✨</p>
+                </div>
                 <div className="overflow-hidden rounded-2xl border border-slate-800/70">
                   <div className="h-52 w-full bg-slate-900/70">
                     <div 
-                      className="flex h-full items-center justify-center text-sm"
+                      className="flex h-full items-center justify-center text-sm transition-all duration-300"
                       style={{
                         background: formData.tone === "hopeful" 
                           ? "linear-gradient(135deg, #065f46 0%, #10b981 100%)"
@@ -601,13 +607,13 @@ function MadlibLabPageContent() {
                   </div>
                   <div className="space-y-3 border-t border-slate-800/70 bg-[#0b1018] px-5 py-4">
                     <div className="flex items-center justify-between">
-                      <p className="text-xl font-semibold text-white">{formData.survivorName}</p>
-                      <Badge className="text-xs">{formData.difficulty}</Badge>
+                      <p className="text-xl font-semibold text-white">{formData.survivorName || "..."}</p>
+                      <Badge className="text-xs capitalize">{formData.difficulty}</Badge>
                     </div>
                     <div className="space-y-2 text-sm text-slate-300">
-                      <p><span className="font-semibold text-white">Enemy:</span> {formData.nemesisName}</p>
-                      <p><span className="font-semibold text-white">Goal:</span> {formData.victoryCondition}</p>
-                      <p><span className="font-semibold text-white">Mood:</span> {formData.tone}</p>
+                      <p><span className="font-semibold text-white">Enemy:</span> {formData.nemesisName || "..."}</p>
+                      <p><span className="font-semibold text-white">Goal:</span> {formData.victoryCondition || "..."}</p>
+                      <p><span className="font-semibold text-white">Mood:</span> <span className="capitalize">{formData.tone}</span></p>
                     </div>
                   </div>
                 </div>
