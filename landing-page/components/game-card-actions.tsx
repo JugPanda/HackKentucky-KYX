@@ -17,6 +17,7 @@ export function GameCardActions({ game, profileUsername }: GameCardActionsProps)
   const [isBuilding, setIsBuilding] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,6 +70,32 @@ export function GameCardActions({ game, profileUsername }: GameCardActionsProps)
       console.error("Publish error:", err);
     } finally {
       setIsPublishing(false);
+    }
+  };
+
+  const handleResetBuild = async () => {
+    setIsResetting(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/games/reset-build", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gameId: game.id }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to reset build");
+      }
+
+      // Refresh the page to show updated status
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to reset build");
+      console.error("Reset build error:", err);
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -135,6 +162,17 @@ export function GameCardActions({ game, profileUsername }: GameCardActionsProps)
               disabled={isBuilding}
             >
               {isBuilding ? "Building..." : "Build"}
+            </Button>
+          )}
+          {game.status === "building" && (
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="flex-1" 
+              onClick={handleResetBuild}
+              disabled={isResetting}
+            >
+              {isResetting ? "Resetting..." : "Reset Build"}
             </Button>
           )}
           {game.status === "built" && game.visibility !== "public" && (
