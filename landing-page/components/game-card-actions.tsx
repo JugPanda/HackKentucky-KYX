@@ -25,6 +25,12 @@ export function GameCardActions({ game, profileUsername }: GameCardActionsProps)
   // Poll for build status when building
   useEffect(() => {
     if (game.status !== "building") {
+      // If we just finished building, auto-navigate to game page
+      if (isBuilding && game.status === "published" && profileUsername && game.slug) {
+        setTimeout(() => {
+          router.push(`/community/${profileUsername}/${game.slug}`);
+        }, 500); // Small delay to show success state
+      }
       setIsBuilding(false);
       return;
     }
@@ -59,7 +65,7 @@ export function GameCardActions({ game, profileUsername }: GameCardActionsProps)
     }, 1000); // Poll every 1 second
 
     return () => clearInterval(pollInterval);
-  }, [game.status, router]);
+  }, [game.status, game.slug, profileUsername, isBuilding, router]);
 
   const handleBuild = async () => {
     setIsBuilding(true);
