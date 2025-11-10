@@ -169,6 +169,15 @@ class Tile:
 
   return `You are an expert game developer. Create a POLISHED, FUN ${genreInfo.description} in Python using Pygame.
 
+**🚨 CRITICAL: CONTROLS MUST WORK! 🚨**
+The #1 priority is that arrow keys and WASD work perfectly. Test your code mentally:
+1. Does player.rect.x actually change when arrow left/A is pressed?
+2. Is \`keys = pygame.key.get_pressed()\` called AFTER \`pygame.event.get()\`?
+3. Are you checking keys inside the \`if game_state == "PLAYING":\` block?
+4. Are you using \`keys[pygame.K_LEFT] or keys[pygame.K_a]\` for BOTH options?
+
+If ANY of these are "no", fix it before generating code!
+
 **Game Theme:**
 - Player Character: ${request.heroName}
 - Enemy/Obstacle: ${request.enemyName}
@@ -285,26 +294,53 @@ import asyncio
 import pygame
 \`\`\`
 
-2. **Event Loop:** MUST handle events properly for web:
+2. **Event Loop & Input Handling:**
 \`\`\`python
 async def main():
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
     clock = pygame.time.Clock()
     running = True
+    game_state = "INTRO"  # INTRO, PLAYING, WIN, LOSE
     
     while running:
         # CRITICAL: Process ALL events every frame
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            # Handle other events here
+            # For one-time key presses (restart, start game)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE and game_state == "INTRO":
+                    game_state = "PLAYING"
+                if event.key == pygame.K_r and game_state in ["WIN", "LOSE"]:
+                    game_state = "INTRO"  # Reset game
         
-        # Get keyboard state for continuous input
+        # CRITICAL: Get keyboard state AFTER event loop for movement
         keys = pygame.key.get_pressed()
         
-        # Your game logic here
+        if game_state == "PLAYING":
+            # MOVEMENT - Check BOTH arrow keys AND WASD
+            # Left movement
+            if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+                player.rect.x -= player.speed
+            # Right movement  
+            if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+                player.rect.x += player.speed
+            
+            # Top-down games: up/down movement
+            if keys[pygame.K_UP] or keys[pygame.K_w]:
+                player.rect.y -= player.speed  # Move up
+            if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+                player.rect.y += player.speed  # Move down
+            
+            # Platformer games: jumping (use KEYDOWN event instead)
+            # In event loop: if event.key == pygame.K_SPACE and player.on_ground: player.vel_y = -15
+            
+            # Keep player on screen
+            player.rect.x = max(0, min(player.rect.x, 800 - player.rect.width))
+            player.rect.y = max(0, min(player.rect.y, 600 - player.rect.height))
         
+        # Update game logic
         # Draw everything
         pygame.display.flip()
         clock.tick(60)
@@ -318,13 +354,55 @@ async def main():
 asyncio.run(main())
 \`\`\`
 
-3. **Input Handling:** Use \`pygame.key.get_pressed()\` for movement (NOT event.key)
-4. Screen size: EXACTLY 800x600
-5. Frame rate: 60 FPS with \`clock.tick(60)\`
-6. ALL positions/sizes must be integers (use int() for calculations)
-7. Include proper game states: PLAYING, WIN, LOSE
-8. Show appropriate screens for each state
-9. "Press R to restart" on game over/win screens (use event.type == pygame.KEYDOWN)
+3. **Collision Detection (CRITICAL - MUST IMPLEMENT):**
+\`\`\`python
+# Rectangle collision (use pygame.Rect)
+def check_collision(rect1, rect2):
+    return rect1.colliderect(rect2)
+
+# Player vs Enemy collision
+for enemy in enemies:
+    if player.rect.colliderect(enemy.rect) and not player.invincible:
+        player.health -= 1
+        player.invincible = True
+        player.invincible_timer = 30  # 0.5 seconds at 60 FPS
+
+# Player vs Collectible collision
+for collectible in collectibles[:]:  # Use slice to allow removal
+    if player.rect.colliderect(collectible.rect):
+        score += 10
+        collectibles.remove(collectible)
+        # Spawn particles
+
+# Player vs Goal/Exit collision
+if player.rect.colliderect(goal_rect):
+    game_state = "WIN"
+
+# Platformer: Player vs Platform collision
+for platform in platforms:
+    if player.rect.colliderect(platform.rect):
+        # Check if player is falling onto platform
+        if player.vel_y > 0 and player.rect.bottom <= platform.rect.top + 10:
+            player.rect.bottom = platform.rect.top
+            player.vel_y = 0
+            player.on_ground = True
+
+# Keep player in bounds
+player.rect.x = max(0, min(player.rect.x, 800 - player.rect.width))
+player.rect.y = max(0, min(player.rect.y, 600 - player.rect.height))
+\`\`\`
+
+4. **Movement Controls (TEST ALL KEYS):**
+   - Arrow Keys: pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN
+   - WASD: pygame.K_a, pygame.K_d, pygame.K_w, pygame.K_s
+   - Space: pygame.K_SPACE (for jumping)
+   - ALWAYS support BOTH arrow keys AND WASD
+
+5. Screen size: EXACTLY 800x600
+6. Frame rate: 60 FPS with \`clock.tick(60)\`
+7. ALL positions/sizes must be integers (use int() for calculations)
+8. Include proper game states: INTRO, PLAYING, WIN, LOSE
+9. Show appropriate screens for each state
 
 **Required Game States:**
 1. INTRO - Story introduction, press SPACE to start
@@ -334,6 +412,8 @@ asyncio.run(main())
 
 **Must Include:**
 ✓ Intro screen with story/goal
+✓ **WORKING INPUT:** Arrow keys AND WASD both work for movement
+✓ **COLLISION DETECTION:** Player vs enemies, collectibles, platforms, boundaries
 ✓ Detailed character art (drawn with shapes, not rectangles)
 ✓ Detailed enemy art matching "${request.enemyName}"
 ✓ At least 1 collectible type (coins, gems, etc.)
@@ -342,6 +422,9 @@ asyncio.run(main())
 ✓ Screen shake on impacts
 ✓ Health bar with heart/icon visuals
 ✓ Score display
+✓ **Enemy collision damage:** Player loses health when hitting enemies
+✓ **Invincibility frames:** 0.5 seconds after taking damage
+✓ **Boundary checking:** Player can't move off screen
 ✓ Smooth enemy AI with varied behaviors
 ✓ Story text at key moments
 ✓ Win screen with story conclusion
@@ -358,7 +441,36 @@ asyncio.run(main())
 
 Make the game FEEL GOOD to play. Every action should have satisfying feedback. The player should want to keep playing!
 
+**FINAL CONTROL CHECK - Your player update MUST look like this:**
+\`\`\`python
+if game_state == "PLAYING":
+    # Get keys - this returns TRUE/FALSE for each key
+    keys = pygame.key.get_pressed()
+    
+    # LEFT movement (check BOTH arrow AND A)
+    if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+        player.rect.x -= player.speed  # THIS MUST change player position!
+        
+    # RIGHT movement (check BOTH arrow AND D)  
+    if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+        player.rect.x += player.speed  # THIS MUST change player position!
+        
+    # UP movement for top-down (check BOTH arrow AND W)
+    if keys[pygame.K_UP] or keys[pygame.K_w]:
+        player.rect.y -= player.speed  # THIS MUST change player position!
+        
+    # DOWN movement for top-down (check BOTH arrow AND S)
+    if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+        player.rect.y += player.speed  # THIS MUST change player position!
+    
+    # Keep on screen
+    player.rect.x = max(0, min(player.rect.x, 800 - player.rect.width))
+    player.rect.y = max(0, min(player.rect.y, 600 - player.rect.height))
+\`\`\`
+
 Generate COMPLETE, WORKING Python code (400-600 lines with all features). Make it HIGHLY POLISHED and FUN!
+
+REMEMBER: If the player can't move with arrow keys and WASD, the game is broken!
 
 Return ONLY the Python code, no explanations.`;
 }
