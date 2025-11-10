@@ -11,6 +11,8 @@ export interface GameGenerationRequest {
   difficulty: "rookie" | "veteran" | "nightmare";
   genre: "platformer" | "adventure" | "puzzle";
   description?: string; // Optional longer description
+  playerSpriteUrl?: string; // Optional uploaded sprite for player
+  enemySpriteUrl?: string; // Optional uploaded sprite for enemy
 }
 
 export interface GeneratedGame {
@@ -193,18 +195,43 @@ ${genreInfo.gameplay}
    - Score multipliers and combo systems
    - Progressive difficulty (enemies get slightly faster over time)
 
-3. **Visual Design (NO IMAGES - Draw Everything):**
-   - **Player Character:** Draw a detailed character using shapes:
-     * Body: Main rectangle/circle in ${mood.playerColor}
+3. **Visual Design:**
+   ${request.playerSpriteUrl || request.enemySpriteUrl ? `
+   **CUSTOM SPRITES PROVIDED:**
+   ${request.playerSpriteUrl ? `- Player sprite URL: ${request.playerSpriteUrl}
+     * Load with urllib and pygame:
+       \`\`\`python
+       import urllib.request
+       import io
+       response = urllib.request.urlopen("${request.playerSpriteUrl}")
+       player_img = pygame.image.load(io.BytesIO(response.read()))
+       player_img = pygame.transform.scale(player_img, (32, 32))  # Scale to game size
+       \`\`\`
+     * Draw with: screen.blit(player_img, player.rect)` : ''}
+   ${request.enemySpriteUrl ? `- Enemy sprite URL: ${request.enemySpriteUrl}
+     * Load with urllib and pygame:
+       \`\`\`python
+       import urllib.request
+       import io
+       response = urllib.request.urlopen("${request.enemySpriteUrl}")
+       enemy_img = pygame.image.load(io.BytesIO(response.read()))
+       enemy_img = pygame.transform.scale(enemy_img, (32, 32))  # Scale to game size
+       \`\`\`
+     * Draw with: screen.blit(enemy_img, enemy.rect)` : ''}
+   
+   **For characters WITHOUT custom sprites, draw them using shapes:**` : `
+   **DRAW CHARACTERS USING SHAPES (No uploaded sprites):**`}
+   - **Player Character:** ${request.playerSpriteUrl ? 'Use uploaded sprite image' : 'Draw detailed character with shapes:'}
+     ${!request.playerSpriteUrl ? `* Body: Main rectangle/circle in ${mood.playerColor}
      * Features: Add eyes, limbs, accessories that match "${request.heroName}"
      * Animation: Bob/rotate slightly when moving
-     * Example: For "Knight" - draw body + helmet shape + sword
+     * Example: For "Knight" - draw body + helmet shape + sword` : ''}
    
-   - **Enemies:** Draw recognizable enemies for "${request.enemyName}":
-     * Use ${mood.enemyColor} as base color
-     * Add distinctive features (spikes, eyes, tentacles, etc.)
+   - **Enemies:** ${request.enemySpriteUrl ? 'Use uploaded sprite image' : 'Draw recognizable enemies:'}
+     ${!request.enemySpriteUrl ? `* Use ${mood.enemyColor} as base color
+     * Add distinctive features (spikes, eyes, tentacles, etc.) for "${request.enemyName}"
      * Animate them (float, pulse, rotate)
-     * Make them look threatening but clear
+     * Make them look threatening but clear` : ''}
    
    - **Environment:**
      * Background gradient: ${mood.bgColor} with lighter/darker shades

@@ -77,6 +77,10 @@ function MadlibLabPageContent() {
   const [promptText, setPromptText] = useState("");
   const [promptStatus, setPromptStatus] = useState<StatusState>(initialStatus);
   const [buildStatus, setBuildStatus] = useState<StatusState>(initialStatus);
+  const [playerSprite, setPlayerSprite] = useState<File | null>(null);
+  const [enemySprite, setEnemySprite] = useState<File | null>(null);
+  const [playerSpritePreview, setPlayerSpritePreview] = useState<string | null>(null);
+  const [enemySpritePreview, setEnemySpritePreview] = useState<string | null>(null);
 
   // Check authentication status and load game if editing
   useEffect(() => {
@@ -152,6 +156,30 @@ function MadlibLabPageContent() {
 
   const updateField = (key: keyof MadlibPayload, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handlePlayerSpriteUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setPlayerSprite(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPlayerSpritePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleEnemySpriteUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setEnemySprite(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEnemySpritePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
 
@@ -242,7 +270,48 @@ function MadlibLabPageContent() {
     setBuildStatus({ loading: true, message: "Generating game code with AI..." });
     
     try {
+      // Step 0: Upload sprites to Supabase if provided
+      let playerSpriteUrl = null;
+      let enemySpriteUrl = null;
+
+      if (playerSprite || enemySprite) {
+        setBuildStatus({ loading: true, message: "Uploading custom sprites..." });
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) throw new Error("Not authenticated");
+
+        // Upload player sprite
+        if (playerSprite) {
+          const fileName = `${user.id}/player-${Date.now()}.${playerSprite.name.split('.').pop()}`;
+          const { error: uploadError } = await supabase.storage
+            .from('game-sprites')
+            .upload(fileName, playerSprite, { upsert: true });
+          
+          if (!uploadError) {
+            playerSpriteUrl = supabase.storage.from('game-sprites').getPublicUrl(fileName).data.publicUrl;
+          } else {
+            console.error("Player sprite upload failed:", uploadError);
+          }
+        }
+
+        // Upload enemy sprite
+        if (enemySprite) {
+          const fileName = `${user.id}/enemy-${Date.now()}.${enemySprite.name.split('.').pop()}`;
+          const { error: uploadError } = await supabase.storage
+            .from('game-sprites')
+            .upload(fileName, enemySprite, { upsert: true });
+          
+          if (!uploadError) {
+            enemySpriteUrl = supabase.storage.from('game-sprites').getPublicUrl(fileName).data.publicUrl;
+          } else {
+            console.error("Enemy sprite upload failed:", uploadError);
+          }
+        }
+      }
+
       // Step 1: Generate AI game code
+      setBuildStatus({ loading: true, message: "Generating game code with AI..." });
       const codeGenRes = await fetch("/api/generate-game-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -254,6 +323,8 @@ function MadlibLabPageContent() {
           difficulty: formData.difficulty,
           genre: formData.genre,
           description: promptText || undefined,
+          playerSpriteUrl: playerSpriteUrl || undefined,
+          enemySpriteUrl: enemySpriteUrl || undefined,
         }),
       });
 
@@ -526,6 +597,69 @@ Be specific about genre, characters, and goal!"
                     required
                   />
                 </div>
+
+                {/* Sprite Upload Section */}
+                <div className="space-y-4 p-4 border border-blue-500/30 rounded-lg bg-blue-500/5">
+                  <p className="text-sm font-semibold text-blue-300">🎨 Custom Sprites (Optional)</p>
+                  <p className="text-xs text-slate-400">Upload PNG/JPG images for your characters. If not provided, AI will draw them.</p>
+                  
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {/* Player Sprite */}
+                    <div>
+                      <label className="text-xs font-medium text-white mb-2 block">
+                        Player Sprite
+                      </label>
+                      <div className="space-y-2">
+                        <Input
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg"
+                          onChange={handlePlayerSpriteUpload}
+                          className="text-sm cursor-pointer"
+                        />
+                        {playerSpritePreview && (
+                          <div className="relative w-24 h-24 border border-slate-600 rounded bg-slate-900">
+                            <img src={playerSpritePreview} alt="Player preview" className="w-full h-full object-contain" />
+                            <button
+                              type="button"
+                              onClick={() => { setPlayerSprite(null); setPlayerSpritePreview(null); }}
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Enemy Sprite */}
+                    <div>
+                      <label className="text-xs font-medium text-white mb-2 block">
+                        Enemy Sprite
+                      </label>
+                      <div className="space-y-2">
+                        <Input
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg"
+                          onChange={handleEnemySpriteUpload}
+                          className="text-sm cursor-pointer"
+                        />
+                        {enemySpritePreview && (
+                          <div className="relative w-24 h-24 border border-slate-600 rounded bg-slate-900">
+                            <img src={enemySpritePreview} alt="Enemy preview" className="w-full h-full object-contain" />
+                            <button
+                              type="button"
+                              onClick={() => { setEnemySprite(null); setEnemySpritePreview(null); }}
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div>
                   <label className="text-sm font-semibold text-white mb-2 block">
                     Goal <span className="text-xs text-slate-400 font-normal">(required)</span>
