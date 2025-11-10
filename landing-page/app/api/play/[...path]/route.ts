@@ -10,30 +10,22 @@ export const revalidate = 0;
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { gameId: string } }
+  { params }: { params: { path: string[] } }
 ) {
   try {
-    const { gameId } = params;
-    const { searchParams } = new URL(request.url);
-    const file = searchParams.get('file') || 'index.html';
+    const pathSegments = params.path;
+    
+    // Path can be:
+    // - [gameId] -> serves index.html
+    // - [gameId, filename] -> serves specific file
+    const gameId = pathSegments[0];
+    const filename = pathSegments[1] || 'index.html';
 
     // Create Supabase client with service role key
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch the game's bundle_url from database
-    const { data: game, error: gameError } = await supabase
-      .from("games")
-      .select("bundle_url")
-      .eq("id", gameId)
-      .single();
-
-    if (gameError || !game) {
-      return new NextResponse("Game not found", { status: 404 });
-    }
-
-    // Extract the storage path from bundle_url
-    // bundle_url looks like: https://...supabase.co/storage/v1/object/public/game-bundles/games/{gameId}/index.html
-    const storagePath = `games/${gameId}/${file}`;
+    // Construct storage path
+    const storagePath = `games/${gameId}/${filename}`;
 
     // Download the file from storage
     const { data: fileData, error: fileError } = await supabase.storage
@@ -41,22 +33,24 @@ export async function GET(
       .download(storagePath);
 
     if (fileError || !fileData) {
-      console.error("File download error:", fileError);
+      console.error(`File not found: ${storagePath}`, fileError);
       return new NextResponse("File not found", { status: 404 });
     }
 
     // Determine content type based on file extension
     let contentType = "text/html";
-    if (file.endsWith(".js")) {
+    if (filename.endsWith(".js")) {
       contentType = "application/javascript";
-    } else if (file.endsWith(".wasm")) {
+    } else if (filename.endsWith(".wasm")) {
       contentType = "application/wasm";
-    } else if (file.endsWith(".png")) {
+    } else if (filename.endsWith(".png")) {
       contentType = "image/png";
-    } else if (file.endsWith(".jpg") || file.endsWith(".jpeg")) {
+    } else if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) {
       contentType = "image/jpeg";
-    } else if (file.endsWith(".apk")) {
+    } else if (filename.endsWith(".apk")) {
       contentType = "application/vnd.android.package-archive";
+    } else if (filename.endsWith(".data")) {
+      contentType = "application/octet-stream";
     }
 
     // Convert blob to array buffer

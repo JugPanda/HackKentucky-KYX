@@ -145,7 +145,7 @@ export default async function GamePage({ params }: PageProps) {
       {game.bundle_url ? (
         <Card className="mb-6 overflow-hidden">
           <iframe
-            src={`/api/play/${game.id}`}
+            src={`/api/play/${game.id}/`}
             className="w-full h-[600px] border-0"
             title={game.title}
             sandbox="allow-scripts allow-same-origin allow-downloads allow-forms allow-modals"
