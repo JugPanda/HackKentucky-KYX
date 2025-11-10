@@ -21,7 +21,7 @@ export function GamePlayer({ gameId, gameTitle }: GamePlayerProps) {
         <p className="text-sm font-medium text-blue-300 mb-1">🎮 How to Play:</p>
         <ol className="text-xs text-blue-200 space-y-1 ml-4 list-decimal">
           <li><strong>Click on the game window below</strong> to focus it</li>
-          <li>Wait for "Python loading..." to finish (~10 seconds)</li>
+          <li>Wait for &quot;Python loading...&quot; to finish (~10 seconds)</li>
           <li>Use <strong>Arrow Keys</strong> or <strong>WASD</strong> to move</li>
           <li>Press <strong>Spacebar</strong> to jump (platformers)</li>
           <li>Press <strong>R</strong> to restart if you win or lose</li>
