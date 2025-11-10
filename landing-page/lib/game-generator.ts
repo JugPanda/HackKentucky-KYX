@@ -160,6 +160,11 @@ class Tile:
   const mood = toneSettings[request.tone];
   const genreInfo = genreTemplates[request.genre];
 
+  // Include user description if provided
+  const descriptionSection = request.description 
+    ? `\n\n**User's Vision:**\n"${request.description}"\n\nIMPORTANT: Incorporate the above description into your game design. Make the game match this vision while following all technical requirements.`
+    : '';
+
   return `You are an expert game developer. Create a POLISHED, FUN ${genreInfo.description} in Python using Pygame.
 
 **Game Theme:**
@@ -168,7 +173,7 @@ class Tile:
 - Objective: ${request.goal}
 - Difficulty: ${request.difficulty} (Player HP: ${diff.health}, Enemy Speed: ${diff.enemySpeed}px/s, Enemies: ${diff.enemyCount})
 - Art Style: ${mood.colors}
-- Mood: ${mood.atmosphere}
+- Mood: ${mood.atmosphere}${descriptionSection}
 
 **Core Gameplay:**${genreInfo.mechanics}
 

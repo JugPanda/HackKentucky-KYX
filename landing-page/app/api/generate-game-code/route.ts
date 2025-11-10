@@ -37,6 +37,9 @@ export async function POST(request: Request) {
 
     console.log("Generating game code with AI...");
     console.log("Hero:", body.heroName, "Enemy:", body.enemyName);
+    if (body.description) {
+      console.log("User Description:", body.description.substring(0, 100) + (body.description.length > 100 ? "..." : ""));
+    }
 
     // Call OpenAI to generate the game code
     // Using gpt-4o-mini: faster, cheaper, and works within Vercel's timeout
