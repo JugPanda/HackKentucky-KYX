@@ -45,15 +45,27 @@ export async function POST(request: Request) {
       messages: [
         {
           role: "system",
-          content: "You are a Pygame developer. Generate simple, working Python game code. Be concise.",
+          content: `You are an expert game developer specializing in Pygame. 
+You create polished, fun, and well-structured games with excellent "game feel".
+You always include:
+- Particle effects for visual feedback
+- Screen shake on impacts
+- Smooth animations and movement
+- Clear UI and health displays
+- Proper game states (playing, win, lose)
+- Invincibility frames after damage
+- Balanced, fun gameplay
+
+Your code is clean, well-organized with classes, and always works perfectly with pygbag (asyncio-compatible).
+You write complete, production-ready games that feel satisfying to play.`,
         },
         {
           role: "user",
           content: prompt,
         },
       ],
-      temperature: 0.5, // Lower temperature for faster, more predictable output
-      max_tokens: 1500, // Reduced significantly for speed
+      temperature: 0.7, // Slightly higher for more creative, varied games
+      max_tokens: 3000, // Increased for more detailed, polished games (300-400 lines)
     });
 
     const generatedCode = completion.choices[0]?.message?.content;
