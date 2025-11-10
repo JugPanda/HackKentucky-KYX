@@ -167,18 +167,39 @@ def build_game(build_id: str, game_id: str, config: dict, generated_code: str = 
                 with open(file_path, "rb") as f:
                     file_data = f.read()
                 
-                # Use direct HTTP request to ensure Content-Type is set correctly
+                # Use direct HTTP request with proper headers
+                import httpx
                 upload_url = f"{SUPABASE_URL}/storage/v1/object/game-bundles/{storage_path}"
-                headers = {
+                
+                # Upload file with binary content type first
+                upload_headers = {
                     "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
-                    "Content-Type": content_type,
-                    "x-upsert": "true"
+                    "Content-Type": "application/octet-stream",
+                    "x-upsert": "true",
+                    "cache-control": "public, max-age=3600",
+                    "content-type": content_type  # Try lowercase as metadata
                 }
                 
-                import httpx
-                response = httpx.post(upload_url, content=file_data, headers=headers, timeout=30.0)
+                response = httpx.post(upload_url, content=file_data, headers=upload_headers, timeout=30.0)
                 response.raise_for_status()
                 logger.info(f"Upload successful: {response.status_code}")
+                
+                # Update file metadata to set correct content-type
+                update_url = f"{SUPABASE_URL}/storage/v1/object/game-bundles/{storage_path}"
+                update_headers = {
+                    "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+                    "Content-Type": "application/json"
+                }
+                update_data = {
+                    "cacheControl": "public, max-age=3600",
+                    "contentType": content_type
+                }
+                
+                update_response = httpx.put(update_url, json=update_data, headers=update_headers, timeout=30.0)
+                if update_response.status_code == 200:
+                    logger.info(f"Metadata updated successfully for {storage_path}")
+                else:
+                    logger.warning(f"Failed to update metadata: {update_response.status_code} - {update_response.text}")
         
         # Get public URL for index.html
         bundle_url = supabase.storage.from_("game-bundles").get_public_url(f"{storage_base}/index.html")
