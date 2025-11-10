@@ -130,23 +130,38 @@ def build_game(build_id: str, game_id: str, config: dict, generated_code: str = 
         logger.info("Uploading build files to Supabase Storage...")
         storage_base = f"games/{game_id}"
         
+        # List all files found in build directory
+        all_files = list(build_output.rglob("*"))
+        file_list = [str(f.relative_to(build_output)) for f in all_files if f.is_file()]
+        logger.info(f"Found {len(file_list)} files to upload: {file_list}")
+        
         # Upload each file individually
-        for file_path in build_output.rglob("*"):
+        for file_path in all_files:
             if file_path.is_file():
                 # Get relative path from build_output
                 relative_path = file_path.relative_to(build_output)
                 storage_path = f"{storage_base}/{relative_path}".replace("\\", "/")
                 
                 # Determine content type
-                content_type = "text/html"
-                if str(file_path).endswith(".js"):
+                file_ext = str(file_path).lower()
+                if file_ext.endswith(".html") or file_ext.endswith(".htm"):
+                    content_type = "text/html"
+                elif file_ext.endswith(".js"):
                     content_type = "application/javascript"
-                elif str(file_path).endswith(".wasm"):
+                elif file_ext.endswith(".wasm"):
                     content_type = "application/wasm"
-                elif str(file_path).endswith(".data"):
+                elif file_ext.endswith(".data"):
                     content_type = "application/octet-stream"
-                elif str(file_path).endswith(".json"):
+                elif file_ext.endswith(".json"):
                     content_type = "application/json"
+                elif file_ext.endswith(".png"):
+                    content_type = "image/png"
+                elif file_ext.endswith((".jpg", ".jpeg")):
+                    content_type = "image/jpeg"
+                elif file_ext.endswith(".apk"):
+                    content_type = "application/vnd.android.package-archive"
+                else:
+                    content_type = "application/octet-stream"
                 
                 logger.info(f"Uploading: {storage_path}")
                 with open(file_path, "rb") as f:
@@ -155,7 +170,7 @@ def build_game(build_id: str, game_id: str, config: dict, generated_code: str = 
                 supabase.storage.from_("game-bundles").upload(
                     storage_path,
                     file_data,
-                    file_options={"content-type": content_type, "upsert": "true"}
+                    file_options={"contentType": content_type, "upsert": True}
                 )
         
         # Get public URL for index.html
