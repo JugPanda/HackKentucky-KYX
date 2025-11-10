@@ -170,7 +170,7 @@ def build_game(build_id: str, game_id: str, config: dict, generated_code: str = 
                 supabase.storage.from_("game-bundles").upload(
                     storage_path,
                     file_data,
-                    file_options={"contentType": content_type, "upsert": True}
+                    file_options={"contentType": content_type, "upsert": "true"}
                 )
         
         # Get public URL for index.html
