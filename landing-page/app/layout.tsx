@@ -8,9 +8,12 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const grotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "KYX Engine | Multi-Room Platformer",
+  title: "KYX | Create Your Own Game with AI",
   description:
-    "A modern, moddable multi-room platformer built with the KYX Engine. Build, remix, and publish games right from your browser.",
+    "Create and play custom games powered by AI. No coding required - just describe your game and watch it come to life!",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
