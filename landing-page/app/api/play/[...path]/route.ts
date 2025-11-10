@@ -8,12 +8,29 @@ export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 export const revalidate = 0;
 
+// Handle CORS preflight requests
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "*",
+      "Cross-Origin-Embedder-Policy": "credentialless",
+      "Cross-Origin-Opener-Policy": "unsafe-none",
+      "Cross-Origin-Resource-Policy": "cross-origin",
+    },
+  });
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { path: string[] } }
 ) {
   try {
     const pathSegments = params.path;
+    console.log('[PLAY API] Request path segments:', pathSegments);
+    
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     let gameId: string = "";
@@ -65,17 +82,87 @@ export async function GET(
       gameId = pathSegments[0];
       filename = pathSegments[1] || 'index.html';
       storagePath = `games/${gameId}/${filename}`;
+      console.log('[PLAY API] Resolved storage path:', storagePath);
     }
 
     // Download the file from storage
+    console.log('[PLAY API] Attempting to download from:', storagePath);
     const { data: fileData, error: fileError } = await supabase.storage
       .from("game-bundles")
       .download(storagePath);
 
     if (fileError || !fileData) {
-      console.error(`File not found: ${storagePath}`, fileError);
-      return new NextResponse("File not found", { status: 404 });
+      console.error(`[PLAY API] File not found: ${storagePath}`, fileError);
+      console.error('[PLAY API] Error details:', JSON.stringify(fileError, null, 2));
+      
+      // Return a helpful error page instead of plain text
+      const errorHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Game Not Found</title>
+          <style>
+            body {
+              font-family: system-ui, sans-serif;
+              background: #0d1117;
+              color: #c9d1d9;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              height: 100vh;
+              margin: 0;
+              padding: 20px;
+            }
+            .error-box {
+              background: #161b22;
+              border: 1px solid #30363d;
+              border-radius: 8px;
+              padding: 32px;
+              max-width: 500px;
+              text-align: center;
+            }
+            h1 { color: #f85149; margin-top: 0; }
+            .details {
+              background: #0d1117;
+              border: 1px solid #21262d;
+              border-radius: 4px;
+              padding: 16px;
+              margin-top: 20px;
+              text-align: left;
+              font-family: monospace;
+              font-size: 12px;
+              overflow-x: auto;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="error-box">
+            <h1>🎮 Game Not Found</h1>
+            <p>The game files could not be loaded.</p>
+            <div class="details">
+              <strong>Storage Path:</strong> ${storagePath}<br>
+              <strong>Error:</strong> ${fileError?.message || 'Unknown error'}<br>
+              <br>
+              <strong>Possible causes:</strong><br>
+              • Game hasn't been built yet<br>
+              • Build failed during processing<br>
+              • Files weren't uploaded to storage<br>
+            </div>
+            <p style="margin-top: 24px; font-size: 14px; color: #8b949e;">
+              Try rebuilding the game from your dashboard.
+            </p>
+          </div>
+        </body>
+        </html>
+      `;
+      
+      return new NextResponse(errorHtml, {
+        status: 404,
+        headers: { "Content-Type": "text/html" }
+      });
     }
+    
+    console.log('[PLAY API] File downloaded successfully, size:', fileData.size);
 
     // Determine content type based on file extension
     let contentType = "text/html";
@@ -95,38 +182,50 @@ export async function GET(
 
     // Convert blob to array buffer
     const arrayBuffer = await fileData.arrayBuffer();
+    
+    // Common headers for all responses
+    const commonHeaders = {
+      "Content-Type": contentType,
+      "Content-Length": arrayBuffer.byteLength.toString(),
+      "Cache-Control": "public, max-age=3600",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Cross-Origin-Embedder-Policy": "credentialless",
+      "Cross-Origin-Opener-Policy": "unsafe-none", 
+      "Cross-Origin-Resource-Policy": "cross-origin",
+    };
 
-    // For HTML files, inject a <base> tag to fix relative paths
+    // For HTML files, inject a <base> tag to fix relative paths and hide debug console
     if (contentType === "text/html") {
       let html = new TextDecoder().decode(arrayBuffer);
       const baseUrl = `/api/play/${gameId}/`;
       
-      // Inject base tag right after <head>
+      // Inject base tag and CSS to hide debug console
+      const injectedHead = `<head>
+    <base href="${baseUrl}">
+    <style>
+      /* Hide Pygbag debug console for production */
+      #pyconsole, #system, #transfer, #info, #box { display: none !important; }
+    </style>`;
+      
       if (html.includes("<head>")) {
-        html = html.replace("<head>", `<head>\n    <base href="${baseUrl}">`);
+        html = html.replace("<head>", injectedHead);
       } else if (html.includes("<!DOCTYPE html>")) {
-        html = html.replace("<!DOCTYPE html>", `<!DOCTYPE html>\n<html><head><base href="${baseUrl}"></head>`);
+        html = html.replace("<!DOCTYPE html>", `<!DOCTYPE html>\n<html>${injectedHead}</head>`);
       }
       
       return new NextResponse(html, {
         status: 200,
-        headers: {
-          "Content-Type": contentType,
-          "Cache-Control": "public, max-age=3600",
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, OPTIONS",
-        },
+        headers: commonHeaders,
       });
     }
 
-    // Return with correct content type
+    // For other files, return with proper CORS/COOP headers for all assets
     return new NextResponse(arrayBuffer, {
       status: 200,
       headers: {
-        "Content-Type": contentType,
-        "Cache-Control": "public, max-age=3600",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        ...commonHeaders,
+        "Cache-Control": "public, max-age=31536000", // 1 year for assets
       },
     });
   } catch (error) {

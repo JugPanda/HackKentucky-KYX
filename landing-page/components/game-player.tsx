@@ -29,8 +29,8 @@ export function GamePlayer({ gameId, gameTitle }: GamePlayerProps) {
             src={`/api/play/${gameId}/`}
             className="w-full h-full border-0 pointer-events-auto"
             title={gameTitle}
-            sandbox="allow-scripts allow-same-origin allow-downloads allow-forms allow-modals"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            sandbox="allow-scripts allow-same-origin allow-downloads allow-forms allow-modals allow-pointer-lock allow-top-navigation"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; gamepad; xr-spatial-tracking; cross-origin-isolated; fullscreen"
             tabIndex={0}
           />
         </div>

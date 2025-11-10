@@ -47,6 +47,25 @@ export async function POST() {
       );
     }
 
+    // Create build queue entry
+    const { data: buildJob, error: buildError } = await supabase
+      .from("build_queue")
+      .insert({
+        game_id: game.id,
+        user_id: user.id,
+        status: "pending",
+      })
+      .select()
+      .single();
+
+    if (buildError || !buildJob) {
+      console.error("Failed to create build job:", buildError);
+      return NextResponse.json(
+        { error: "Failed to queue build" },
+        { status: 500 }
+      );
+    }
+
     // Trigger build with special flag
     const buildServiceUrl = process.env.BUILD_SERVICE_URL;
     const buildServiceSecret = process.env.BUILD_SERVICE_SECRET;
@@ -65,8 +84,11 @@ export async function POST() {
         "X-Build-Secret": buildServiceSecret,
       },
       body: JSON.stringify({
-        game_id: game.id,
-        use_test_game: true, // Special flag
+        buildId: buildJob.id,
+        gameId: game.id,
+        config: game.config,
+        generatedCode: null, // Not used for test game
+        use_test_game: true, // Special flag to use test-game.py
       }),
     });
 

@@ -144,12 +144,30 @@ export default async function GamePage({ params }: PageProps) {
 
       {/* Game Player */}
       {game.bundle_url ? (
-        <GamePlayer gameId={game.id} gameTitle={game.title} />
+        <>
+          {isOwner && game.status !== "published" && (
+            <Card className="mb-4 p-4 border-yellow-500/50 bg-yellow-500/10">
+              <p className="text-yellow-200 text-sm">
+                ⚠️ <strong>Owner Note:</strong> Game status is &quot;{game.status}&quot;. 
+                {game.status === "building" && " The game is currently being built..."}
+                {game.status === "draft" && " This game hasn't been built yet."}
+                {game.status === "failed" && " The build failed. Try rebuilding from your dashboard."}
+              </p>
+            </Card>
+          )}
+          <GamePlayer gameId={game.id} gameTitle={game.title} />
+        </>
       ) : (
         <Card className="mb-6 p-8 text-center">
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground mb-4">
             Game is still building... Check back soon!
           </p>
+          {isOwner && (
+            <div className="text-sm text-muted-foreground">
+              <p>Status: <strong>{game.status}</strong></p>
+              <p className="mt-2">Go to your <Link href="/dashboard" className="text-blue-400 hover:underline">dashboard</Link> to check build progress.</p>
+            </div>
+          )}
         </Card>
       )}
 
