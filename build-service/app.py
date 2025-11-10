@@ -197,7 +197,7 @@ def build_game(build_id: str, game_id: str, config: dict, generated_code: str = 
                 update_url = f"{SUPABASE_URL}/storage/v1/object/game-bundles/{storage_path}"
                 update_payload = {
                     "contentType": content_type,
-                    "cacheControl": "public, max-age=3600"
+                    "cacheControl": "no-cache, no-store, must-revalidate"
                 }
                 update_headers = {
                     "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
