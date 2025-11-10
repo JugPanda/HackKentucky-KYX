@@ -147,11 +147,14 @@ export default async function GamePage({ params }: PageProps) {
           <div className="mb-2 text-sm text-muted-foreground">
             💡 Click on the game to start playing! Use Arrow Keys or WASD to move, Spacebar to jump.
           </div>
-          <Card className="mb-6 overflow-hidden">
-            <div className="w-full h-[600px] overflow-hidden">
+          <Card className="mb-6 overflow-hidden cursor-pointer" onClick={(e) => {
+            const iframe = e.currentTarget.querySelector('iframe');
+            if (iframe) iframe.focus();
+          }}>
+            <div className="w-full h-[600px] overflow-hidden relative">
               <iframe
                 src={`/api/play/${game.id}/`}
-                className="w-full h-full border-0"
+                className="w-full h-full border-0 pointer-events-auto"
                 title={game.title}
                 sandbox="allow-scripts allow-same-origin allow-downloads allow-forms allow-modals"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
