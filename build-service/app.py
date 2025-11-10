@@ -163,14 +163,18 @@ def build_game(build_id: str, game_id: str, config: dict, generated_code: str = 
                 else:
                     content_type = "application/octet-stream"
                 
-                logger.info(f"Uploading: {storage_path}")
+                logger.info(f"Uploading: {storage_path} with Content-Type: {content_type}")
                 with open(file_path, "rb") as f:
                     file_data = f.read()
                 
                 supabase.storage.from_("game-bundles").upload(
                     storage_path,
                     file_data,
-                    file_options={"contentType": content_type, "upsert": "true"}
+                    file_options={
+                        "content-type": content_type,
+                        "cache-control": "public, max-age=3600",
+                        "upsert": "true"
+                    }
                 )
         
         # Get public URL for index.html
