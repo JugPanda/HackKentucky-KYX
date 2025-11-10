@@ -143,15 +143,21 @@ export default async function GamePage({ params }: PageProps) {
 
       {/* Game Player */}
       {game.bundle_url ? (
-        <Card className="mb-6 overflow-hidden">
-          <iframe
-            src={`/api/play/${game.id}/`}
-            className="w-full h-[600px] border-0"
-            title={game.title}
-            sandbox="allow-scripts allow-same-origin allow-downloads allow-forms allow-modals"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          />
-        </Card>
+        <>
+          <div className="mb-2 text-sm text-muted-foreground">
+            💡 Click on the game to start playing! Use Arrow Keys or WASD to move, Spacebar to jump.
+          </div>
+          <Card className="mb-6 overflow-hidden">
+            <iframe
+              src={`/api/play/${game.id}/`}
+              className="w-full h-[600px] border-0"
+              title={game.title}
+              sandbox="allow-scripts allow-same-origin allow-downloads allow-forms allow-modals"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              tabIndex={0}
+            />
+          </Card>
+        </>
       ) : (
         <Card className="mb-6 p-8 text-center">
           <p className="text-muted-foreground">
