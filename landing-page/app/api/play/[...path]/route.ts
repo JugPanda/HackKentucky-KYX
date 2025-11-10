@@ -56,6 +56,29 @@ export async function GET(
     // Convert blob to array buffer
     const arrayBuffer = await fileData.arrayBuffer();
 
+    // For HTML files, inject a <base> tag to fix relative paths
+    if (contentType === "text/html") {
+      let html = new TextDecoder().decode(arrayBuffer);
+      const baseUrl = `/api/play/${gameId}/`;
+      
+      // Inject base tag right after <head>
+      if (html.includes("<head>")) {
+        html = html.replace("<head>", `<head>\n    <base href="${baseUrl}">`);
+      } else if (html.includes("<!DOCTYPE html>")) {
+        html = html.replace("<!DOCTYPE html>", `<!DOCTYPE html>\n<html><head><base href="${baseUrl}"></head>`);
+      }
+      
+      return new NextResponse(html, {
+        status: 200,
+        headers: {
+          "Content-Type": contentType,
+          "Cache-Control": "public, max-age=3600",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, OPTIONS",
+        },
+      });
+    }
+
     // Return with correct content type
     return new NextResponse(arrayBuffer, {
       status: 200,
