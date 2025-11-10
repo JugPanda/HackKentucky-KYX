@@ -14,18 +14,58 @@ export async function GET(
 ) {
   try {
     const pathSegments = params.path;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Path can be:
+    let gameId: string = "";
+    let filename: string = "";
+    let storagePath: string | undefined;
+    
+    // Handle different path patterns:
     // - [gameId] -> serves index.html
     // - [gameId, filename] -> serves specific file
-    const gameId = pathSegments[0];
-    const filename = pathSegments[1] || 'index.html';
-
-    // Create Supabase client with service role key
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Construct storage path
-    const storagePath = `games/${gameId}/${filename}`;
+    // - [filename.apk] -> search for .apk file across all games
+    
+    if (pathSegments.length === 1 && pathSegments[0].endsWith('.apk')) {
+      // Special case: .apk file requested directly (e.g., /api/play/kyx-build-xxx.apk)
+      const apkFilename = pathSegments[0];
+      
+      // List all game directories
+      const { data: gameDirs, error: listError } = await supabase.storage
+        .from("game-bundles")
+        .list("games");
+      
+      if (listError || !gameDirs) {
+        console.error("Failed to list game directories:", listError);
+        return new NextResponse("File not found", { status: 404 });
+      }
+      
+      // Search for the .apk file in each game directory
+      for (const dir of gameDirs) {
+        if (!dir.name) continue;
+        const testPath = `games/${dir.name}/${apkFilename}`;
+        const { data: testData, error: testError } = await supabase.storage
+          .from("game-bundles")
+          .download(testPath);
+        
+        if (!testError && testData) {
+          // Found it!
+          gameId = dir.name;
+          filename = apkFilename;
+          storagePath = testPath;
+          break;
+        }
+      }
+      
+      if (!storagePath) {
+        console.error(`APK file ${apkFilename} not found in any game directory`);
+        return new NextResponse("File not found", { status: 404 });
+      }
+    } else {
+      // Normal case: gameId and optional filename
+      gameId = pathSegments[0];
+      filename = pathSegments[1] || 'index.html';
+      storagePath = `games/${gameId}/${filename}`;
+    }
 
     // Download the file from storage
     const { data: fileData, error: fileError } = await supabase.storage
