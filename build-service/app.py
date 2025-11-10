@@ -167,15 +167,18 @@ def build_game(build_id: str, game_id: str, config: dict, generated_code: str = 
                 with open(file_path, "rb") as f:
                     file_data = f.read()
                 
-                supabase.storage.from_("game-bundles").upload(
-                    storage_path,
-                    file_data,
-                    file_options={
-                        "content-type": content_type,
-                        "cache-control": "public, max-age=3600",
-                        "upsert": "true"
-                    }
-                )
+                # Use direct HTTP request to ensure Content-Type is set correctly
+                upload_url = f"{SUPABASE_URL}/storage/v1/object/game-bundles/{storage_path}"
+                headers = {
+                    "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+                    "Content-Type": content_type,
+                    "x-upsert": "true"
+                }
+                
+                import httpx
+                response = httpx.post(upload_url, content=file_data, headers=headers, timeout=30.0)
+                response.raise_for_status()
+                logger.info(f"Upload successful: {response.status_code}")
         
         # Get public URL for index.html
         bundle_url = supabase.storage.from_("game-bundles").get_public_url(f"{storage_base}/index.html")
