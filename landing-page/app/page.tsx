@@ -1,15 +1,18 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check, Sparkles, Zap, Rocket } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserNav } from "@/components/auth/user-nav";
+import { SUBSCRIPTION_LIMITS } from "@/lib/subscription-limits";
+import type { SubscriptionTier } from "@/lib/db-types";
 
 const navLinks = [
   { label: "How It Works", href: "#how-it-works" },
+  { label: "Pricing", href: "#pricing" },
   { label: "Community", href: "/community" },
   { label: "Create Game", href: "/lab" },
 ];
@@ -150,6 +153,107 @@ export default function HomePage() {
             </div>
           </section>
 
+          {/* Pricing Section */}
+          <section id="pricing" className="space-y-8 py-12">
+            <div className="space-y-3 text-center">
+              <h2 className="text-3xl font-semibold text-white sm:text-4xl">
+                Choose Your Plan
+              </h2>
+              <p className="text-slate-400 max-w-2xl mx-auto">
+                Start for free, upgrade when you need more. All plans include access to our AI game builder.
+              </p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-3">
+              {/* Free Tier */}
+              <Card className="border-slate-800/70 bg-slate-950/50 hover:border-blue-500/30 transition-all">
+                <CardHeader className="text-center pb-4">
+                  <div className="flex justify-center mb-3">
+                    <Sparkles className="w-10 h-10 text-blue-400" />
+                  </div>
+                  <CardTitle className="text-2xl">Free</CardTitle>
+                  <div className="mt-3">
+                    <span className="text-4xl font-bold text-white">$0</span>
+                    <span className="text-slate-400">/month</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <ul className="space-y-3 text-sm text-slate-300">
+                    {SUBSCRIPTION_LIMITS.free.features.map((feature, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button className="w-full" variant="outline" asChild>
+                    <Link href="/auth/sign-up">Get Started Free</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Pro Tier */}
+              <Card className="border-purple-500/50 bg-gradient-to-br from-purple-950/30 to-slate-950/50 hover:border-purple-500/70 transition-all relative">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                  Popular
+                </div>
+                <CardHeader className="text-center pb-4 pt-6">
+                  <div className="flex justify-center mb-3">
+                    <Zap className="w-10 h-10 text-purple-400" />
+                  </div>
+                  <CardTitle className="text-2xl">Pro</CardTitle>
+                  <div className="mt-3">
+                    <span className="text-4xl font-bold text-white">$5</span>
+                    <span className="text-slate-400">/month</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <ul className="space-y-3 text-sm text-slate-300">
+                    {SUBSCRIPTION_LIMITS.pro.features.map((feature, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600" asChild>
+                    <Link href="/pricing">Upgrade to Pro</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Premium Tier */}
+              <Card className="border-yellow-500/50 bg-slate-950/50 hover:border-yellow-500/70 transition-all">
+                <CardHeader className="text-center pb-4">
+                  <div className="flex justify-center mb-3">
+                    <Rocket className="w-10 h-10 text-yellow-400" />
+                  </div>
+                  <CardTitle className="text-2xl">Premium</CardTitle>
+                  <div className="mt-3">
+                    <span className="text-4xl font-bold text-white">$15</span>
+                    <span className="text-slate-400">/month</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <ul className="space-y-3 text-sm text-slate-300">
+                    {SUBSCRIPTION_LIMITS.premium.features.map((feature, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-semibold" asChild>
+                    <Link href="/pricing">Upgrade to Premium</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="text-center">
+              <Link href="/pricing" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
+                View detailed pricing comparison →
+              </Link>
+            </div>
+          </section>
 
         <section className="space-y-8 py-12">
           <div className="flex flex-col gap-4 text-center">
