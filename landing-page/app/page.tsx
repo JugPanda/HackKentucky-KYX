@@ -33,8 +33,8 @@ const onboardingSteps = [
 
 export default function HomePage() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#010409] text-slate-100">
-      <div className="pointer-events-none absolute inset-0">
+    <div className="relative min-h-screen overflow-hidden bg-white dark:bg-[#010409] text-slate-900 dark:text-slate-100">
+      <div className="pointer-events-none absolute inset-0 dark:block hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(56,189,248,0.12),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(16,185,129,0.15),transparent_45%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(1,4,9,0.95),rgba(2,6,23,0.9))]" />
@@ -43,9 +43,9 @@ export default function HomePage() {
       <div className="relative z-10 flex flex-col">
         <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-8">
           <Logo />
-          <nav className="hidden items-center gap-8 text-sm text-slate-300 md:flex">
+          <nav className="hidden items-center gap-8 text-sm text-slate-700 dark:text-slate-300 md:flex">
             {navLinks.map((link) => (
-              <Link key={link.label} href={link.href} className="transition hover:text-white">
+              <Link key={link.label} href={link.href} className="transition hover:text-slate-900 dark:hover:text-white">
                 {link.label}
               </Link>
             ))}
@@ -63,23 +63,23 @@ export default function HomePage() {
                 Create Your Own Game
               </Badge>
               <div className="space-y-6">
-                <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-[3.5rem]">
+                <h1 className="text-4xl font-semibold leading-tight text-slate-900 dark:text-white sm:text-5xl lg:text-[3.5rem]">
                   Create Your Own Game with AI
                 </h1>
-                <p className="max-w-2xl text-lg text-slate-300">
+                <p className="max-w-2xl text-lg text-slate-700 dark:text-slate-300">
                   Describe your game idea in plain English, and we&apos;ll turn it into a playable game. 
                   Share it with friends or publish it for the community to play.
                 </p>
-                <div className="rounded-2xl border border-slate-800/70 bg-slate-950/40 p-5 text-sm text-slate-300">
+                <div className="rounded-2xl border border-slate-300 dark:border-slate-800/70 bg-slate-100 dark:bg-slate-950/40 p-5 text-sm text-slate-700 dark:text-slate-300">
                   <ol className="mt-3 space-y-2">
                     <li>
-                      <span className="font-semibold text-white">1. Describe your game idea</span>
+                      <span className="font-semibold text-slate-900 dark:text-white">1. Describe your game idea</span>
                     </li>
                     <li>
-                      <span className="font-semibold text-white">2. Customize the characters and difficulty</span>
+                      <span className="font-semibold text-slate-900 dark:text-white">2. Customize the characters and difficulty</span>
                     </li>
                     <li>
-                      <span className="font-semibold text-white">3. Build and share your game</span>
+                      <span className="font-semibold text-slate-900 dark:text-white">3. Build and share your game</span>
                     </li>
                   </ol>
                 </div>
@@ -100,17 +100,17 @@ export default function HomePage() {
 
             <Card
               id="builder"
-              className="relative overflow-hidden border border-slate-800/70 bg-gradient-to-br from-[#161b22] via-[#0d1117] to-[#020711]"
+              className="relative overflow-hidden border border-slate-300 dark:border-slate-800/70 bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 dark:from-[#161b22] dark:via-[#0d1117] dark:to-[#020711]"
             >
               <CardContent className="mt-6 space-y-5">
                 <div className="space-y-2">
-                  <p className="text-lg font-semibold text-white">Try the Demo</p>
-                  <p className="text-slate-300">
+                  <p className="text-lg font-semibold text-slate-900 dark:text-white">Try the Demo</p>
+                  <p className="text-slate-700 dark:text-slate-300">
                     Play this example to see what you can create. Your game will look and play just like this!
                   </p>
                 </div>
-                <div className="rounded-2xl border border-slate-800/80 bg-black/60 p-2">
-                  <div className="aspect-[4/3] overflow-hidden rounded-xl border border-slate-900/80 bg-black">
+                <div className="rounded-2xl border border-slate-300 dark:border-slate-800/80 bg-white dark:bg-black/60 p-2">
+                  <div className="aspect-[4/3] overflow-hidden rounded-xl border border-slate-200 dark:border-slate-900/80 bg-slate-100 dark:bg-black">
                     <iframe
                       src="/demo-game/index.html"
                       title="KYX sample game"
@@ -130,21 +130,21 @@ export default function HomePage() {
           </section>
 
           <section id="how-it-works" className="space-y-8 py-12">
-            <div className="rounded-3xl border border-slate-800/70 bg-slate-950/40 px-8 py-10">
+            <div className="rounded-3xl border border-slate-300 dark:border-slate-800/70 bg-slate-100 dark:bg-slate-950/40 px-8 py-10">
               <div className="space-y-3 text-center">
-                <h2 className="text-3xl font-semibold text-white sm:text-4xl">
+                <h2 className="text-3xl font-semibold text-slate-900 dark:text-white sm:text-4xl">
                   How It Works
                 </h2>
-                <p className="text-slate-400">
+                <p className="text-slate-600 dark:text-slate-400">
                   Creating your game is simple - just describe what you want and we&apos;ll handle the rest.
                 </p>
               </div>
               <div className="mt-8 grid gap-6 md:grid-cols-3">
                 {onboardingSteps.map((step) => (
-                  <Card key={step.title} className="border-slate-800/70 bg-slate-950/50">
+                  <Card key={step.title} className="border-slate-300 dark:border-slate-800/70 bg-white dark:bg-slate-950/50">
                     <CardContent className="space-y-3 p-6">
-                      <p className="text-lg font-semibold text-white">{step.title}</p>
-                      <p className="text-slate-300">{step.description}</p>
+                      <p className="text-lg font-semibold text-slate-900 dark:text-white">{step.title}</p>
+                      <p className="text-slate-700 dark:text-slate-300">{step.description}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -155,16 +155,16 @@ export default function HomePage() {
           {/* Pricing Section */}
           <section id="pricing" className="space-y-8 py-12">
             <div className="space-y-3 text-center">
-              <h2 className="text-3xl font-semibold text-white sm:text-4xl">
+              <h2 className="text-3xl font-semibold text-slate-900 dark:text-white sm:text-4xl">
                 Choose Your Plan
               </h2>
-              <p className="text-slate-400 max-w-2xl mx-auto">
+              <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
                 Start for free, upgrade when you need more. All plans include access to our AI game builder.
               </p>
             </div>
             <div className="grid gap-6 md:grid-cols-3">
               {/* Free Tier */}
-              <Card className="border-slate-800/70 bg-slate-950/50 hover:border-blue-500/30 transition-all">
+              <Card className="border-slate-300 dark:border-slate-800/70 bg-white dark:bg-slate-950/50 hover:border-blue-500/50 dark:hover:border-blue-500/30 transition-all">
                 <CardHeader className="text-center pb-4">
                   <div className="flex justify-center mb-3">
                     <Sparkles className="w-10 h-10 text-blue-400" />
@@ -191,7 +191,7 @@ export default function HomePage() {
               </Card>
 
               {/* Pro Tier */}
-              <Card className="border-purple-500/50 bg-gradient-to-br from-purple-950/30 to-slate-950/50 hover:border-purple-500/70 transition-all relative">
+              <Card className="border-purple-500/50 bg-gradient-to-br from-purple-50 to-slate-50 dark:from-purple-950/30 dark:to-slate-950/50 hover:border-purple-500/70 transition-all relative">
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
                   Popular
                 </div>
@@ -221,7 +221,7 @@ export default function HomePage() {
               </Card>
 
               {/* Premium Tier */}
-              <Card className="border-yellow-500/50 bg-slate-950/50 hover:border-yellow-500/70 transition-all">
+              <Card className="border-yellow-500/50 bg-white dark:bg-slate-950/50 hover:border-yellow-500/70 transition-all">
                 <CardHeader className="text-center pb-4">
                   <div className="flex justify-center mb-3">
                     <Rocket className="w-10 h-10 text-yellow-400" />
@@ -256,21 +256,21 @@ export default function HomePage() {
 
         <section className="space-y-8 py-12">
           <div className="flex flex-col gap-4 text-center">
-            <h2 className="text-3xl font-semibold text-white sm:text-4xl">
+            <h2 className="text-3xl font-semibold text-slate-900 dark:text-white sm:text-4xl">
               No Coding Required
             </h2>
-            <p className="text-slate-400 max-w-2xl mx-auto">
+            <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
               Anyone can create a game. Just describe your idea, customize a few settings, and you&apos;re done!
             </p>
           </div>
         </section>
 
-          <section className="rounded-3xl border border-slate-800/70 bg-gradient-to-br from-[#0d1117] via-[#05070c] to-black p-10 text-center">
+          <section className="rounded-3xl border border-slate-300 dark:border-slate-800/70 bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100 dark:from-[#0d1117] dark:via-[#05070c] dark:to-black p-10 text-center">
             <div className="space-y-4">
-              <h2 className="text-3xl font-semibold text-white sm:text-4xl">
+              <h2 className="text-3xl font-semibold text-slate-900 dark:text-white sm:text-4xl">
                 Ready to Create Your Game?
               </h2>
-              <p className="text-slate-400">
+              <p className="text-slate-600 dark:text-slate-400">
                 Sign up now and start building your own game in minutes.
               </p>
             </div>
@@ -287,9 +287,9 @@ export default function HomePage() {
           </section>
         </main>
 
-        <footer className="border-t border-slate-800/80 bg-slate-950/40">
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-8 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-slate-300">
+        <footer className="border-t border-slate-300 dark:border-slate-800/80 bg-slate-100 dark:bg-slate-950/40">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-8 text-sm text-slate-600 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-slate-700 dark:text-slate-300">
               Built in Kentucky
             </div>
             <div className="flex items-center gap-2">
