@@ -164,19 +164,19 @@ export default function HomePage() {
             </div>
             <div className="grid gap-6 md:grid-cols-3">
               {/* Free Tier */}
-              <Card className="border-slate-300 dark:border-slate-800/70 bg-white dark:bg-slate-950/50 hover:border-blue-500/50 dark:hover:border-blue-500/30 transition-all">
+              <Card className="border-gray-500/50 bg-white dark:bg-slate-950/50 hover:border-gray-500/70 transition-all">
                 <CardHeader className="text-center pb-4">
                   <div className="flex justify-center mb-3">
-                    <Sparkles className="w-10 h-10 text-blue-400" />
+                    <Sparkles className="w-10 h-10" />
                   </div>
                   <CardTitle className="text-2xl">Free</CardTitle>
                   <div className="mt-3">
-                    <span className="text-4xl font-bold text-white">$0</span>
-                    <span className="text-slate-400">/month</span>
+                    <span className="text-4xl font-bold text-slate-900 dark:text-white">$0</span>
+                    <span className="text-slate-600 dark:text-slate-400">/month</span>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <ul className="space-y-3 text-sm text-slate-300">
+                  <ul className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
                     {SUBSCRIPTION_LIMITS.free.features.map((feature, i) => (
                       <li key={i} className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
@@ -191,22 +191,19 @@ export default function HomePage() {
               </Card>
 
               {/* Pro Tier */}
-              <Card className="border-purple-500/50 bg-gradient-to-br from-purple-50 to-slate-50 dark:from-purple-950/30 dark:to-slate-950/50 hover:border-purple-500/70 transition-all relative">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                  Popular
-                </div>
-                <CardHeader className="text-center pb-4 pt-6">
+              <Card className="border-blue-500/50 bg-gradient-to-br from-blue-50 to-slate-50 dark:from-blue-950/30 dark:to-slate-950/50 hover:border-blue-500/70 transition-all">
+                <CardHeader className="text-center pb-4">
                   <div className="flex justify-center mb-3">
-                    <Zap className="w-10 h-10 text-purple-400" />
+                    <Zap className="w-10 h-10" />
                   </div>
                   <CardTitle className="text-2xl">Pro</CardTitle>
                   <div className="mt-3">
-                    <span className="text-4xl font-bold text-white">$5</span>
-                    <span className="text-slate-400">/month</span>
+                    <span className="text-4xl font-bold text-slate-900 dark:text-white">$5</span>
+                    <span className="text-slate-600 dark:text-slate-400">/month</span>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <ul className="space-y-3 text-sm text-slate-300">
+                  <ul className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
                     {SUBSCRIPTION_LIMITS.pro.features.map((feature, i) => (
                       <li key={i} className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
@@ -214,26 +211,29 @@ export default function HomePage() {
                       </li>
                     ))}
                   </ul>
-                  <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600" asChild>
+                  <Button className="w-full" variant="default" asChild>
                     <Link href="/pricing">Upgrade to Pro</Link>
                   </Button>
                 </CardContent>
               </Card>
 
               {/* Premium Tier */}
-              <Card className="border-yellow-500/50 bg-white dark:bg-slate-950/50 hover:border-yellow-500/70 transition-all">
-                <CardHeader className="text-center pb-4">
+              <Card className="border-purple-500/50 bg-gradient-to-br from-purple-50 to-slate-50 dark:from-purple-950/30 dark:to-slate-950/50 hover:border-purple-500/70 transition-all relative">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                  Most Popular
+                </div>
+                <CardHeader className="text-center pb-4 pt-6">
                   <div className="flex justify-center mb-3">
-                    <Rocket className="w-10 h-10 text-yellow-400" />
+                    <Rocket className="w-10 h-10" />
                   </div>
                   <CardTitle className="text-2xl">Premium</CardTitle>
                   <div className="mt-3">
-                    <span className="text-4xl font-bold text-white">$15</span>
-                    <span className="text-slate-400">/month</span>
+                    <span className="text-4xl font-bold text-slate-900 dark:text-white">$15</span>
+                    <span className="text-slate-600 dark:text-slate-400">/month</span>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <ul className="space-y-3 text-sm text-slate-300">
+                  <ul className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
                     {SUBSCRIPTION_LIMITS.premium.features.map((feature, i) => (
                       <li key={i} className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
@@ -241,7 +241,7 @@ export default function HomePage() {
                       </li>
                     ))}
                   </ul>
-                  <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-semibold" asChild>
+                  <Button className="w-full" variant="default" asChild>
                     <Link href="/pricing">Upgrade to Premium</Link>
                   </Button>
                 </CardContent>
