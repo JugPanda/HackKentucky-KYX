@@ -148,10 +148,10 @@ export default function HomePage() {
               </div>
               <div className="mt-8 grid gap-6 md:grid-cols-3">
                 {onboardingSteps.map((step) => (
-                  <Card key={step.title} className="border-slate-200 dark:border-slate-800/70 bg-gradient-to-br from-white to-slate-50 dark:bg-slate-950/50 shadow-md shadow-slate-200/50 dark:shadow-none hover:shadow-lg hover:shadow-slate-300/50 dark:hover:shadow-none transition-shadow">
+                  <Card key={step.title} className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 shadow-md shadow-slate-200/50 dark:shadow-none hover:shadow-lg hover:shadow-slate-300/50 dark:hover:shadow-none transition-shadow">
                     <CardContent className="space-y-3 p-6">
                       <p className="text-lg font-bold text-slate-900 dark:text-white">{step.title}</p>
-                      <p className="text-slate-800 dark:text-slate-300 font-medium">{step.description}</p>
+                      <p className="text-slate-700 dark:text-slate-300 font-medium">{step.description}</p>
                     </CardContent>
                   </Card>
                 ))}
