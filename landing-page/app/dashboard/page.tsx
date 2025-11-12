@@ -1,12 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Game } from "@/lib/db-types";
+import { Game, SubscriptionTier } from "@/lib/db-types";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { GameCardActions } from "@/components/game-card-actions";
 import { DashboardNav } from "@/components/dashboard-nav";
+import { SUBSCRIPTION_LIMITS } from "@/lib/subscription-limits";
+import { Sparkles, Zap, Rocket } from "lucide-react";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -33,6 +35,22 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .single();
 
+  const subscriptionTier = (profile?.subscription_tier || "free") as SubscriptionTier;
+  const gamesCreated = profile?.games_created_this_month || 0;
+  const limits = SUBSCRIPTION_LIMITS[subscriptionTier];
+  const gamesLimit = limits.gamesPerMonth === Infinity ? "Unlimited" : limits.gamesPerMonth;
+
+  const getTierIcon = () => {
+    switch (subscriptionTier) {
+      case "free":
+        return <Sparkles className="w-6 h-6 text-blue-400" />;
+      case "pro":
+        return <Zap className="w-6 h-6 text-purple-400" />;
+      case "premium":
+        return <Rocket className="w-6 h-6 text-yellow-400" />;
+    }
+  };
+
   return (
     <>
       <DashboardNav />
@@ -41,6 +59,39 @@ export default async function DashboardPage() {
           <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
           <p className="text-muted-foreground">Welcome back, {profile?.username}!</p>
         </div>
+
+      {/* Subscription Status */}
+      <Card className="mb-8 border-2 border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-purple-600/10">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {getTierIcon()}
+              <div>
+                <CardTitle className="capitalize">{limits.name} Plan</CardTitle>
+                <CardDescription>
+                  {gamesLimit === "Unlimited" 
+                    ? `${gamesCreated} games created this month`
+                    : `${gamesCreated} / ${gamesLimit} games this month`}
+                </CardDescription>
+              </div>
+            </div>
+            {subscriptionTier === "free" && (
+              <Link href="/pricing">
+                <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
+                  Upgrade Plan
+                </Button>
+              </Link>
+            )}
+          </div>
+        </CardHeader>
+        {subscriptionTier === "free" && gamesCreated >= limits.gamesPerMonth && (
+          <CardContent>
+            <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 text-sm">
+              You&apos;ve reached your monthly limit. Upgrade to Pro or Premium to create more games!
+            </div>
+          </CardContent>
+        )}
+      </Card>
 
       {/* Quick Actions */}
       <div className="mb-8 flex gap-4">

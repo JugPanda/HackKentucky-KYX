@@ -4,6 +4,9 @@ export type GameVisibility = "private" | "unlisted" | "public";
 export type BuildQueueStatus = "pending" | "processing" | "completed" | "failed";
 export type ReportStatus = "pending" | "reviewed" | "resolved" | "dismissed";
 
+export type SubscriptionTier = 'free' | 'pro' | 'premium';
+export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'incomplete';
+
 export interface Profile {
   id: string;
   username: string;
@@ -11,6 +14,13 @@ export interface Profile {
   bio?: string;
   created_at: string;
   updated_at: string;
+  subscription_tier: SubscriptionTier;
+  subscription_status: SubscriptionStatus;
+  stripe_customer_id?: string;
+  stripe_subscription_id?: string;
+  subscription_current_period_end?: string;
+  games_created_this_month: number;
+  last_reset_date: string;
 }
 
 export interface Game {

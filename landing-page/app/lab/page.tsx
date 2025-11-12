@@ -16,6 +16,9 @@ import {
 } from "@/lib/schemas";
 import { createClient } from "@/lib/supabase/client";
 import { DashboardNav } from "@/components/dashboard-nav";
+import { getUserSubscription } from "@/lib/stripe/subscription-helpers";
+import { canCreateGame, canUseCustomSprites } from "@/lib/subscription-limits";
+import type { SubscriptionTier } from "@/lib/db-types";
 
 type GeneratedConfig = {
   story?: {
@@ -82,6 +85,24 @@ function MadlibLabPageContent() {
   const [enemySprite, setEnemySprite] = useState<File | null>(null);
   const [playerSpritePreview, setPlayerSpritePreview] = useState<string | null>(null);
   const [enemySpritePreview, setEnemySpritePreview] = useState<string | null>(null);
+  
+  // Subscription state
+  const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>("free");
+  const [gamesCreated, setGamesCreated] = useState(0);
+  const [canCreate, setCanCreate] = useState(true);
+
+  // Load subscription info
+  useEffect(() => {
+    const loadSubscriptionInfo = async () => {
+      const subscription = await getUserSubscription();
+      if (subscription) {
+        setSubscriptionTier(subscription.tier);
+        setGamesCreated(subscription.gamesCreatedThisMonth);
+        setCanCreate(canCreateGame(subscription.tier, subscription.gamesCreatedThisMonth));
+      }
+    };
+    loadSubscriptionInfo();
+  }, []);
 
   // Check authentication status and load game if editing
   useEffect(() => {
@@ -231,6 +252,26 @@ function MadlibLabPageContent() {
   const handleBuild = async () => {
     if (!isSignedIn) {
       router.push('/auth/sign-in');
+      return;
+    }
+
+    // Check subscription limits
+    if (!canCreate) {
+      setBuildStatus({ 
+        loading: false, 
+        message: `You've reached your limit of games this month. Upgrade to create more!`, 
+        error: true 
+      });
+      return;
+    }
+
+    // Check if custom sprites are allowed
+    if ((playerSprite || enemySprite) && !canUseCustomSprites(subscriptionTier)) {
+      setBuildStatus({ 
+        loading: false, 
+        message: "Custom sprites are only available for Pro and Premium subscribers. Upgrade to use this feature!", 
+        error: true 
+      });
       return;
     }
 

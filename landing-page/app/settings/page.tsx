@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { DashboardNav } from "@/components/dashboard-nav";
-import { Loader2, Save, User, Mail, Lock } from "lucide-react";
+import { Loader2, Save, User, Mail, Lock, CreditCard, Sparkles, Zap, Crown } from "lucide-react";
+import { getUserSubscription } from "@/lib/stripe/subscription-helpers";
+import { TIER_INFO } from "@/lib/stripe/config";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -26,9 +28,17 @@ export default function SettingsPage() {
   
   // Email change
   const [newEmail, setNewEmail] = useState("");
+  
+  // Subscription
+  const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'pro' | 'premium'>('free');
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string>('active');
+  const [gamesCreated, setGamesCreated] = useState(0);
+  const [gamesLimit, setGamesLimit] = useState(0);
+  const [periodEnd, setPeriodEnd] = useState<Date | null>(null);
 
   useEffect(() => {
     loadProfile();
+    loadSubscription();
     handleEmailVerification();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -39,12 +49,18 @@ export default function SettingsPage() {
     if (params.get('email-updated') === 'true') {
       const supabase = createClient();
       
-      // Refresh the session to get updated user data
-      const { data: { session }, error } = await supabase.auth.refreshSession();
+      // Refresh the session multiple times to ensure we get the updated email
+      await supabase.auth.refreshSession();
       
-      if (!error && session) {
-        // Reload profile to show updated email
-        await loadProfile();
+      // Wait a moment for the session to fully update
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Get the fresh user data
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user?.email) {
+        // Update the email state with the new email
+        setEmail(user.email);
         setMessage({ type: "success", text: "Email updated successfully! Your new email is now active." });
       } else {
         setMessage({ type: "success", text: "Email updated! Please sign out and sign back in with your new email." });
@@ -78,6 +94,53 @@ export default function SettingsPage() {
     }
     
     setLoading(false);
+  };
+
+  const loadSubscription = async () => {
+    const subscription = await getUserSubscription();
+    if (subscription) {
+      setSubscriptionTier(subscription.tier);
+      setSubscriptionStatus(subscription.status);
+      setGamesCreated(subscription.gamesCreatedThisMonth);
+      setGamesLimit(subscription.gamesLimit);
+      setPeriodEnd(subscription.currentPeriodEnd || null);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    setSaving(true);
+    setMessage(null);
+
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        setMessage({ type: "error", text: "Not authenticated" });
+        return;
+      }
+
+      // Get Stripe customer portal URL
+      const response = await fetch('/api/stripe/create-portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const { url, error } = await response.json();
+
+      if (error) {
+        setMessage({ type: "error", text: error });
+        return;
+      }
+
+      // Redirect to Stripe Customer Portal
+      window.location.href = url;
+    } catch (error) {
+      console.error('Portal error:', error);
+      setMessage({ type: "error", text: "Failed to open subscription management" });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleUpdateUsername = async (e: React.FormEvent) => {
@@ -231,6 +294,78 @@ export default function SettingsPage() {
                   Save Username
                 </Button>
               </form>
+            </CardContent>
+          </Card>
+
+          {/* Subscription Section */}
+          <Card className="border-2 border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-purple-600/10">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5" />
+                Subscription
+              </CardTitle>
+              <CardDescription>
+                Manage your subscription and billing
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 rounded-lg bg-background/50 border">
+                <div className="flex items-center gap-3">
+                  {subscriptionTier === 'free' && <Sparkles className="w-6 h-6 text-blue-400" />}
+                  {subscriptionTier === 'pro' && <Zap className="w-6 h-6 text-purple-400" />}
+                  {subscriptionTier === 'premium' && <Crown className="w-6 h-6 text-yellow-400" />}
+                  <div>
+                    <p className="font-semibold text-lg capitalize">{TIER_INFO[subscriptionTier].name} Plan</p>
+                    <p className="text-sm text-muted-foreground">
+                      {gamesLimit === -1 
+                        ? `${gamesCreated} games created this month (unlimited)` 
+                        : `${gamesCreated} / ${gamesLimit} games this month`}
+                    </p>
+                    {periodEnd && subscriptionTier !== 'free' && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Renews on {periodEnd.toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-2xl">${TIER_INFO[subscriptionTier].price}</p>
+                  {subscriptionTier !== 'free' && <p className="text-xs text-muted-foreground">per month</p>}
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                {subscriptionTier === 'free' ? (
+                  <Button 
+                    onClick={() => router.push('/pricing')}
+                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                  >
+                    Upgrade to Pro
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleManageSubscription}
+                    disabled={saving}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                    Manage Subscription
+                  </Button>
+                )}
+                <Button
+                  onClick={() => router.push('/pricing')}
+                  variant="outline"
+                >
+                  View All Plans
+                </Button>
+              </div>
+
+              {subscriptionStatus === 'past_due' && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-sm">
+                  Your payment failed. Please update your payment method to continue using premium features.
+                </div>
+              )}
             </CardContent>
           </Card>
 

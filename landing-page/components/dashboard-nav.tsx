@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Home, User, LogOut } from "lucide-react";
+import { Home, User, LogOut, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
@@ -42,6 +42,12 @@ export function DashboardNav() {
             <Link href="/community">
               <Button variant="ghost" size="sm">
                 Community
+              </Button>
+            </Link>
+            <Link href="/pricing">
+              <Button variant="ghost" size="sm" className="gap-2">
+                <Sparkles className="w-4 h-4" />
+                Pricing
               </Button>
             </Link>
             <Link href="/settings">
