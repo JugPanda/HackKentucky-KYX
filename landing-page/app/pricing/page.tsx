@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, Loader2, Sparkles, Zap, Rocket } from "lucide-react";
 import { SUBSCRIPTION_LIMITS } from "@/lib/subscription-limits";
+import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import type { SubscriptionTier } from "@/lib/db-types";
 
 export default function PricingPage() {
@@ -100,10 +103,30 @@ export default function PricingPage() {
     }
   };
 
+  // Public navigation for non-authenticated users
+  const PublicNav = () => (
+    <header className="border-b border-slate-800/80 bg-slate-950/40 sticky top-0 z-50 backdrop-blur-sm">
+      <div className="container mx-auto flex items-center justify-between px-4 py-4">
+        <Link href="/">
+          <Logo />
+        </Link>
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/auth/sign-in">Sign In</Link>
+          </Button>
+          <Button size="sm" asChild>
+            <Link href="/auth/sign-up">Sign Up</Link>
+          </Button>
+        </div>
+      </div>
+    </header>
+  );
+
   if (loading) {
     return (
       <>
-        <DashboardNav />
+        {isAuthenticated ? <DashboardNav /> : <PublicNav />}
         <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-[50vh]">
           <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
         </div>
@@ -113,7 +136,7 @@ export default function PricingPage() {
 
   return (
     <>
-      <DashboardNav />
+      {isAuthenticated ? <DashboardNav /> : <PublicNav />}
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold mb-4">Choose Your Plan</h1>
