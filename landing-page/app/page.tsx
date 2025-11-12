@@ -92,12 +92,12 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-4">
-                <Button size="lg" asChild>
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg" asChild>
                   <Link href="/lab">
                     Create Your Game <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" asChild>
+                <Button size="lg" variant="outline" className="border-2 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold" asChild>
                   <Link href="/community">
                     Browse Community Games
                   </Link>
@@ -111,8 +111,8 @@ export default function HomePage() {
             >
               <CardContent className="mt-6 space-y-5">
                 <div className="space-y-2">
-                  <p className="text-lg font-semibold text-slate-900 dark:text-white">Try the Demo</p>
-                  <p className="text-slate-700 dark:text-slate-300">
+                  <p className="text-xl font-bold text-slate-900 dark:text-white">Try the Demo</p>
+                  <p className="text-slate-800 dark:text-slate-300 font-medium">
                     Play this example to see what you can create. Your game will look and play just like this!
                   </p>
                 </div>
@@ -127,7 +127,7 @@ export default function HomePage() {
                     />
                   </div>
                 </div>
-                <Button variant="outline" className="w-full border-emerald-500/40 text-emerald-200 hover:bg-emerald-500/10" asChild>
+                <Button variant="outline" className="w-full border-2 border-emerald-500 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-200 hover:bg-emerald-100 dark:hover:bg-emerald-500/10 font-semibold" asChild>
                   <Link href="/demo-game/index.html" target="_blank">
                     Open demo in a new tab
                   </Link>
@@ -150,8 +150,8 @@ export default function HomePage() {
                 {onboardingSteps.map((step) => (
                   <Card key={step.title} className="border-slate-200 dark:border-slate-800/70 bg-gradient-to-br from-white to-slate-50 dark:bg-slate-950/50 shadow-md shadow-slate-200/50 dark:shadow-none hover:shadow-lg hover:shadow-slate-300/50 dark:hover:shadow-none transition-shadow">
                     <CardContent className="space-y-3 p-6">
-                      <p className="text-lg font-semibold text-slate-900 dark:text-white">{step.title}</p>
-                      <p className="text-slate-700 dark:text-slate-300">{step.description}</p>
+                      <p className="text-lg font-bold text-slate-900 dark:text-white">{step.title}</p>
+                      <p className="text-slate-800 dark:text-slate-300 font-medium">{step.description}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -183,15 +183,15 @@ export default function HomePage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <ul className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
+                  <ul className="space-y-3 text-sm text-slate-800 dark:text-slate-300 font-medium">
                     {SUBSCRIPTION_LIMITS.free.features.map((feature, i) => (
                       <li key={i} className="flex items-start gap-2">
-                        <Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+                        <Check className="w-4 h-4 text-green-600 dark:text-green-500 shrink-0 mt-0.5" />
                         <span>{feature}</span>
                       </li>
                     ))}
                   </ul>
-                  <Button className="w-full" variant="outline" asChild>
+                  <Button className="w-full border-2 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold" variant="outline" asChild>
                     <Link href="/auth/sign-up">Get Started Free</Link>
                   </Button>
                 </CardContent>
@@ -210,15 +210,15 @@ export default function HomePage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <ul className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
+                  <ul className="space-y-3 text-sm text-slate-800 dark:text-slate-300 font-medium">
                     {SUBSCRIPTION_LIMITS.pro.features.map((feature, i) => (
                       <li key={i} className="flex items-start gap-2">
-                        <Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+                        <Check className="w-4 h-4 text-green-600 dark:text-green-500 shrink-0 mt-0.5" />
                         <span>{feature}</span>
                       </li>
                     ))}
                   </ul>
-                  <Button className="w-full" variant="default" asChild>
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md" asChild>
                     <Link href="/pricing">Upgrade to Pro</Link>
                   </Button>
                 </CardContent>
@@ -240,22 +240,22 @@ export default function HomePage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <ul className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
+                  <ul className="space-y-3 text-sm text-slate-800 dark:text-slate-300 font-medium">
                     {SUBSCRIPTION_LIMITS.premium.features.map((feature, i) => (
                       <li key={i} className="flex items-start gap-2">
-                        <Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+                        <Check className="w-4 h-4 text-green-600 dark:text-green-500 shrink-0 mt-0.5" />
                         <span>{feature}</span>
                       </li>
                     ))}
                   </ul>
-                  <Button className="w-full" variant="default" asChild>
+                  <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold shadow-md" asChild>
                     <Link href="/pricing">Upgrade to Premium</Link>
                   </Button>
                 </CardContent>
               </Card>
             </div>
             <div className="text-center">
-              <Link href="/pricing" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
+              <Link href="/pricing" className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors font-medium">
                 View detailed pricing comparison →
               </Link>
             </div>
@@ -282,12 +282,12 @@ export default function HomePage() {
               </p>
             </div>
             <div className="mt-6 flex flex-wrap justify-center gap-4">
-              <Button size="lg" asChild>
+              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg" asChild>
                 <Link href="/auth/sign-up">
                   Get Started Free
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild>
+              <Button size="lg" variant="outline" className="border-2 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold" asChild>
                 <Link href="/lab">Try It First</Link>
               </Button>
             </div>
