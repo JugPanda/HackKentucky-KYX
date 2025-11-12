@@ -8,7 +8,6 @@ import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserNav } from "@/components/auth/user-nav";
 import { SUBSCRIPTION_LIMITS } from "@/lib/subscription-limits";
-import type { SubscriptionTier } from "@/lib/db-types";
 
 const navLinks = [
   { label: "How It Works", href: "#how-it-works" },
