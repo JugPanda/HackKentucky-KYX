@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Update profile with subscription info
-        // @ts-ignore - Stripe API version mismatch for current_period_end
+        // @ts-expect-error - Stripe API version mismatch for current_period_end
         const periodEnd = subscription.current_period_end;
         await supabase
           .from("profiles")
