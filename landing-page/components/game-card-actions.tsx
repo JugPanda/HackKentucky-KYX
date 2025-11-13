@@ -227,11 +227,11 @@ export function GameCardActions({ game, profileUsername }: GameCardActionsProps)
         </div>
       ) : (
         <div className="space-y-2">
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {showBuildButton && (
               <Button 
                 size="sm" 
-                className="flex-1" 
+                className="flex-1 min-w-[120px]" 
                 onClick={handleBuild}
                 disabled={isBuilding}
               >
@@ -249,7 +249,7 @@ export function GameCardActions({ game, profileUsername }: GameCardActionsProps)
               <Button 
                 size="sm" 
                 variant="outline"
-                className="flex-1" 
+                className="flex-1 min-w-[120px]" 
                 disabled
               >
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -259,7 +259,7 @@ export function GameCardActions({ game, profileUsername }: GameCardActionsProps)
             {showViewButton && (
               <Link
                 href={`/community/${profileUsername}/${game.slug}`}
-                className="flex-1"
+                className="flex-1 min-w-[120px]"
               >
                 <Button size="sm" className="w-full">
                   🎮 Play Game
@@ -270,7 +270,7 @@ export function GameCardActions({ game, profileUsername }: GameCardActionsProps)
               <Button 
                 size="sm" 
                 variant="outline"
-                className="flex-1" 
+                className="flex-1 min-w-[120px]" 
                 onClick={handlePublish}
                 disabled={isPublishing}
               >
@@ -278,7 +278,7 @@ export function GameCardActions({ game, profileUsername }: GameCardActionsProps)
               </Button>
             )}
             <Link href={`/lab?edit=${game.id}`}>
-              <Button size="sm" variant="ghost">
+              <Button size="sm" variant="ghost" className="shrink-0">
                 Edit
               </Button>
             </Link>
@@ -286,7 +286,7 @@ export function GameCardActions({ game, profileUsername }: GameCardActionsProps)
               size="sm"
               variant="ghost"
               onClick={() => setShowDeleteConfirm(true)}
-              className="text-red-400 hover:text-red-300 hover:bg-red-950/20"
+              className="text-red-400 hover:text-red-300 hover:bg-red-950/20 shrink-0"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
