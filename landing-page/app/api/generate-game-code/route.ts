@@ -88,6 +88,7 @@ You write complete, production-ready games that feel satisfying to play.`;
       ],
       temperature: 0.7, // Slightly higher for more creative, varied games
       max_tokens: language === "javascript" ? 3500 : 3000, // Reduced for faster generation
+    }, {
       timeout: 50000, // 50 second timeout for OpenAI API
     });
 
