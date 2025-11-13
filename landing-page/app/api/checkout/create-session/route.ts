@@ -56,8 +56,8 @@ export async function POST(request: NextRequest) {
 
     // Get the price ID based on tier
     const priceId = tier === "pro" 
-      ? process.env.STRIPE_PRO_PRICE_ID 
-      : process.env.STRIPE_PREMIUM_PRICE_ID;
+      ? process.env.STRIPE_PRICE_ID_PRO 
+      : process.env.STRIPE_PRICE_ID_PREMIUM;
 
     if (!priceId) {
       return NextResponse.json(
