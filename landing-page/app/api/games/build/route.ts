@@ -90,6 +90,7 @@ export async function POST(request: Request) {
         gameId: game.id,
         config: game.config,
         generatedCode: game.generated_code,
+        language: game.language || "python", // Default to python for existing games
         use_test_game: false,
       }),
     });

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-import { buildGameGenerationPrompt, type GameGenerationRequest } from "@/lib/game-generator";
+import { buildGameGenerationPrompt, buildJavaScriptGamePrompt, type GameGenerationRequest } from "@/lib/game-generator";
 
 // Force dynamic rendering and disable caching
 export const dynamic = 'force-dynamic';
@@ -32,35 +32,54 @@ export async function POST(request: Request) {
       );
     }
 
-    // Build the prompt
-    const prompt = buildGameGenerationPrompt(body);
+    // Build the prompt based on language
+    const language = body.language || "python";
+    const prompt = language === "javascript" 
+      ? buildJavaScriptGamePrompt(body)
+      : buildGameGenerationPrompt(body);
 
     console.log("Generating game code with AI...");
-    console.log("Hero:", body.heroName, "Enemy:", body.enemyName);
+    console.log("Language:", language, "Hero:", body.heroName, "Enemy:", body.enemyName);
     if (body.description) {
       console.log("User Description:", body.description.substring(0, 100) + (body.description.length > 100 ? "..." : ""));
     }
 
     // Call OpenAI to generate the game code
     // Using gpt-4o-mini: faster, cheaper, and works within Vercel's timeout
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // Fast model
-      messages: [
-        {
-          role: "system",
-          content: `You are an expert game developer specializing in Pygame. 
+    const systemPrompt = language === "javascript"
+      ? `You are an expert game developer specializing in HTML5 Canvas and JavaScript game development.
 You create polished, fun, and well-structured games with excellent "game feel".
 You always include:
 - Particle effects for visual feedback
 - Screen shake on impacts
 - Smooth animations and movement
 - Clear UI and health displays
-- Proper game states (playing, win, lose)
+- Proper game states (intro, playing, level complete, win, lose)
 - Invincibility frames after damage
-- Balanced, fun gameplay
+- Balanced, fun gameplay with multiple levels
+
+Your code is clean, well-organized with ES6 classes, and runs flawlessly in modern browsers.
+You write complete, production-ready HTML5 games that feel satisfying to play.`
+      : `You are an expert game developer specializing in Pygame. 
+You create polished, fun, and well-structured games with excellent "game feel".
+You always include:
+- Particle effects for visual feedback
+- Screen shake on impacts
+- Smooth animations and movement
+- Clear UI and health displays
+- Proper game states (intro, playing, level complete, win, lose)
+- Invincibility frames after damage
+- Balanced, fun gameplay with multiple levels
 
 Your code is clean, well-organized with classes, and always works perfectly with pygbag (asyncio-compatible).
-You write complete, production-ready games that feel satisfying to play.`,
+You write complete, production-ready games that feel satisfying to play.`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini", // Fast model
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt,
         },
         {
           role: "user",
@@ -68,7 +87,7 @@ You write complete, production-ready games that feel satisfying to play.`,
         },
       ],
       temperature: 0.7, // Slightly higher for more creative, varied games
-      max_tokens: 4500, // Increased for highly detailed games with story, collectibles, power-ups (400-600 lines)
+      max_tokens: language === "javascript" ? 5000 : 4500, // JavaScript HTML files can be longer
     });
 
     const generatedCode = completion.choices[0]?.message?.content;
@@ -77,23 +96,38 @@ You write complete, production-ready games that feel satisfying to play.`,
       throw new Error("AI did not generate any code");
     }
 
-    // Extract Python code from markdown code blocks if present
+    // Extract code from markdown code blocks if present
     let mainPy = generatedCode;
-    const codeBlockMatch = generatedCode.match(/```python\n([\s\S]*?)\n```/);
-    if (codeBlockMatch) {
-      mainPy = codeBlockMatch[1];
-    }
+    
+    if (language === "javascript") {
+      // Extract HTML from markdown code blocks
+      const htmlBlockMatch = generatedCode.match(/```html\n([\s\S]*?)\n```/);
+      if (htmlBlockMatch) {
+        mainPy = htmlBlockMatch[1];
+      }
+      
+      // Basic validation for HTML
+      if (!mainPy.includes("<!DOCTYPE html>") && !mainPy.includes("<html")) {
+        console.warn("Generated code may not be valid HTML");
+      }
+    } else {
+      // Extract Python code from markdown code blocks
+      const codeBlockMatch = generatedCode.match(/```python\n([\s\S]*?)\n```/);
+      if (codeBlockMatch) {
+        mainPy = codeBlockMatch[1];
+      }
 
-    // Basic validation - check for required imports and async main
-    const hasAsyncio = mainPy.includes("import asyncio");
-    const hasPygame = mainPy.includes("import pygame");
-    const hasAsyncMain = mainPy.includes("async def main");
+      // Basic validation - check for required imports and async main
+      const hasAsyncio = mainPy.includes("import asyncio");
+      const hasPygame = mainPy.includes("import pygame");
+      const hasAsyncMain = mainPy.includes("async def main");
 
-    if (!hasAsyncio || !hasPygame || !hasAsyncMain) {
-      console.warn("Generated code may not be pygbag-compatible");
-      // Try to fix common issues
-      if (!hasAsyncio) {
-        mainPy = "import asyncio\n" + mainPy;
+      if (!hasAsyncio || !hasPygame || !hasAsyncMain) {
+        console.warn("Generated code may not be pygbag-compatible");
+        // Try to fix common issues
+        if (!hasAsyncio) {
+          mainPy = "import asyncio\n" + mainPy;
+        }
       }
     }
 

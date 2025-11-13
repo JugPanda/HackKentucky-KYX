@@ -85,6 +85,7 @@ function MadlibLabPageContent() {
   const [enemySprite, setEnemySprite] = useState<File | null>(null);
   const [playerSpritePreview, setPlayerSpritePreview] = useState<string | null>(null);
   const [enemySpritePreview, setEnemySpritePreview] = useState<string | null>(null);
+  const [gameLanguage, setGameLanguage] = useState<"python" | "javascript">("python");
   
   // Subscription state
   const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>("free");
@@ -331,6 +332,7 @@ function MadlibLabPageContent() {
           description: promptText || undefined,
           playerSpriteUrl: playerSpriteUrl || undefined,
           enemySpriteUrl: enemySpriteUrl || undefined,
+          language: gameLanguage,
         }),
       });
 
@@ -445,7 +447,8 @@ function MadlibLabPageContent() {
             title: formData.survivorName || "My Platformer",
             description: formData.victoryCondition || "A platformer adventure",
             config: gameConfig,
-            generatedCode: mainPy, // Include AI-generated Python code
+            generatedCode: mainPy, // Include AI-generated code
+            language: gameLanguage, // Include selected language
           }),
         });
 
@@ -705,6 +708,41 @@ Be specific about genre, characters, and goal!"
                       <p className="text-xs text-slate-400">{genre.blurb}</p>
                     </button>
                   ))}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-sm font-semibold text-white">Programming Language</p>
+                <p className="text-xs text-slate-400">Choose which language to build your game in</p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => setGameLanguage("python")}
+                    className={`rounded-2xl border px-4 py-4 text-left text-sm transition ${
+                      gameLanguage === "python"
+                        ? "border-blue-500/60 bg-blue-500/10"
+                        : "border-slate-800/70 bg-slate-950/40 hover:border-slate-600/70"
+                    }`}
+                  >
+                    <p className="font-semibold text-white">
+                      🐍 Python (Pygame)
+                    </p>
+                    <p className="text-xs text-slate-400">Classic game development with Pygame</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGameLanguage("javascript")}
+                    className={`rounded-2xl border px-4 py-4 text-left text-sm transition ${
+                      gameLanguage === "javascript"
+                        ? "border-blue-500/60 bg-blue-500/10"
+                        : "border-slate-800/70 bg-slate-950/40 hover:border-slate-600/70"
+                    }`}
+                  >
+                    <p className="font-semibold text-white">
+                      ⚡ JavaScript (HTML5 Canvas)
+                    </p>
+                    <p className="text-xs text-slate-400">Fast web-native games with Canvas API</p>
+                  </button>
                 </div>
               </div>
 

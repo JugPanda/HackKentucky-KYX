@@ -70,9 +70,11 @@ def update_game_status(game_id: str, status: str, bundle_url: str = None):
         logger.error(f"Failed to update game status: {e}")
 
 
-def build_game(build_id: str, game_id: str, config: dict, generated_code: str = None, use_test_game: bool = False) -> str:
+def build_game(build_id: str, game_id: str, config: dict, generated_code: str = None, use_test_game: bool = False, language: str = "python") -> str:
     """
-    Build a game using pygbag and upload to Supabase Storage.
+    Build a game and upload to Supabase Storage.
+    For Python games: uses pygbag compilation
+    For JavaScript games: uploads HTML directly
     Returns the bundle URL.
     """
     temp_dir = None
@@ -81,6 +83,7 @@ def build_game(build_id: str, game_id: str, config: dict, generated_code: str = 
         # Create temporary directory
         temp_dir = tempfile.mkdtemp(prefix="kyx-build-")
         logger.info(f"Created temp directory: {temp_dir}")
+        logger.info(f"Building {language} game")
         
         # Write game_config.json
         config_path = Path(temp_dir) / "game_config.json"
@@ -88,7 +91,52 @@ def build_game(build_id: str, game_id: str, config: dict, generated_code: str = 
             json.dump(config, f, indent=2)
         logger.info("Wrote game_config.json")
         
-        # Write main.py
+        # Handle JavaScript games (no compilation needed)
+        if language == "javascript":
+            logger.info("Processing JavaScript game - no compilation needed")
+            
+            if not generated_code:
+                raise ValueError("JavaScript game requires generated_code (HTML)")
+            
+            # Write the HTML file directly
+            index_path = Path(temp_dir) / "index.html"
+            with open(index_path, "w", encoding="utf-8") as f:
+                f.write(generated_code)
+            logger.info("Wrote index.html")
+            
+            # Upload the HTML file directly to Supabase Storage
+            storage_path = f"games/{game_id}/index.html"
+            with open(index_path, "rb") as f:
+                html_data = f.read()
+            
+            file_options = {
+                "content-type": "text/html",
+                "cache-control": "no-cache, no-store, must-revalidate",
+                "upsert": "true"
+            }
+            
+            try:
+                supabase.storage.from_("game-bundles").upload(
+                    storage_path,
+                    html_data,
+                    file_options=file_options
+                )
+                logger.info(f"✅ Upload successful: {storage_path}")
+            except Exception as e:
+                logger.warning(f"Upload error (might be upsert conflict): {e}")
+                supabase.storage.from_("game-bundles").update(
+                    storage_path,
+                    html_data,
+                    file_options=file_options
+                )
+                logger.info(f"✅ Update successful: {storage_path}")
+            
+            # Get public URL
+            bundle_url = supabase.storage.from_("game-bundles").get_public_url(storage_path)
+            logger.info(f"JavaScript game bundle URL: {bundle_url}")
+            return bundle_url
+        
+        # Python game: Write main.py and compile with pygbag
         main_py_path = Path(temp_dir) / "main.py"
         
         # Check if this is a test game build
@@ -242,18 +290,19 @@ def process_build():
         config = data.get("config")
         generated_code = data.get("generatedCode")
         use_test_game = data.get("use_test_game", False)
+        language = data.get("language", "python")  # Default to python for backwards compatibility
         
         if not all([build_id, game_id, config]):
             return jsonify({"error": "Missing required fields"}), 400
         
-        logger.info(f"Processing build request: build_id={build_id}, game_id={game_id}, use_test_game={use_test_game}")
+        logger.info(f"Processing build request: build_id={build_id}, game_id={game_id}, language={language}, use_test_game={use_test_game}")
         
         # Update status to processing
         update_build_status(build_id, "processing")
         update_game_status(game_id, "building")
         
         # Build the game
-        bundle_url = build_game(build_id, game_id, config, generated_code, use_test_game)
+        bundle_url = build_game(build_id, game_id, config, generated_code, use_test_game, language)
         
         # Update status to completed
         update_build_status(build_id, "completed")

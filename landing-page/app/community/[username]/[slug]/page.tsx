@@ -158,7 +158,7 @@ export default async function GamePage({ params }: PageProps) {
               </p>
             </Card>
           )}
-          <GamePlayer gameId={game.id} gameTitle={game.title} />
+          <GamePlayer gameId={game.id} gameTitle={game.title} language={game.language || "python"} />
         </>
       ) : (
         <Card className="mb-6 p-8 text-center">

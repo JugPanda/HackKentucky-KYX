@@ -13,6 +13,7 @@ export interface GameGenerationRequest {
   description?: string; // Optional longer description
   playerSpriteUrl?: string; // Optional uploaded sprite for player
   enemySpriteUrl?: string; // Optional uploaded sprite for enemy
+  language?: "python" | "javascript"; // Programming language (defaults to python)
 }
 
 export interface GeneratedGame {
@@ -197,8 +198,55 @@ NEVER create a game without full keyboard controls!
 
 **Core Gameplay:**${genreInfo.mechanics}
 
+**MULTI-LEVEL PROGRESSION (CRITICAL):**
+Create AT LEAST 3 distinct levels with increasing difficulty:
+
+**Level 1 (Tutorial/Easy):**
+- ${difficultySettings[request.difficulty].enemyCount.split('-')[0]} enemies
+- Simple layout with clear paths
+- Introduce core mechanics
+- Story text: "Level 1: The Beginning"
+
+**Level 2 (Intermediate):**
+- ${difficultySettings[request.difficulty].enemyCount.split('-')[1] || '4'} enemies
+- More complex layout with obstacles
+- Add new enemy types or behaviors
+- Story text: "Level 2: The Challenge Grows"
+
+**Level 3 (Hard):**
+- ${parseInt(difficultySettings[request.difficulty].enemyCount.split('-')[1] || '5') + 2} enemies
+- Most challenging layout
+- Boss enemy or final gauntlet
+- Story text: "Level 3: The Final Stand"
+
+**Level System Implementation:**
+\`\`\`python
+# Track current level
+current_level = 1
+max_levels = 3
+
+# Level transitions
+def check_level_complete():
+    # Platformer: Reached goal
+    # Adventure: Defeated all enemies
+    # Puzzle: Completed objective
+    if level_complete_condition:
+        current_level += 1
+        if current_level > max_levels:
+            game_state = "WIN"
+        else:
+            reset_level()  # New level with harder enemies
+\`\`\`
+
 **Design Philosophy:**
 ${genreInfo.gameplay}
+
+**PROGRESSION & REPLAYABILITY:**
+- **Save best score** between runs (in-memory)
+- **Speed-run timer** displayed prominently
+- **Combo system** for consecutive actions (kills, jumps, collectibles)
+- **Unlockables**: "Beat Level 3 in under 2 minutes!"
+- **Level skip**: After beating the game once, allow level selection
 
 **Code Quality Requirements:**
 
@@ -423,6 +471,9 @@ player.rect.y = max(0, min(player.rect.y, 600 - player.rect.height))
 ✓ Intro screen with story/goal
 ✓ **WORKING INPUT:** Arrow keys AND WASD both work for movement
 ✓ **COLLISION DETECTION:** Player vs enemies, collectibles, platforms, boundaries
+✓ **3 LEVELS MINIMUM:** Each with different layouts and progressive difficulty
+✓ **Level transition:** Clear "Level X Complete!" screen before next level
+✓ **Level counter display:** Show "Level X/3" in UI
 ✓ Detailed character art (drawn with shapes, not rectangles)
 ✓ Detailed enemy art matching "${request.enemyName}"
 ✓ At least 1 collectible type (coins, gems, etc.)
@@ -430,17 +481,19 @@ player.rect.y = max(0, min(player.rect.y, 600 - player.rect.height))
 ✓ Particle effects on all actions
 ✓ Screen shake on impacts
 ✓ Health bar with heart/icon visuals
-✓ Score display
+✓ Score display AND timer (for speed-runs)
 ✓ **Enemy collision damage:** Player loses health when hitting enemies
 ✓ **Invincibility frames:** 0.5 seconds after taking damage
 ✓ **Boundary checking:** Player can't move off screen
-✓ Smooth enemy AI with varied behaviors
-✓ Story text at key moments
-✓ Win screen with story conclusion
-✓ Lose screen with retry encouragement
-✓ Background gradient with details
-✓ Platform/environment decorations
-✓ Progressive difficulty or challenge curve
+✓ Smooth enemy AI with varied behaviors (level 1: slow, level 3: fast/aggressive)
+✓ Story text at key moments and level starts
+✓ Win screen with story conclusion AND final stats (time, score)
+✓ Lose screen with retry encouragement AND progress shown
+✓ Background gradient with details (change colors per level)
+✓ Platform/environment decorations (more complex each level)
+✓ Progressive difficulty with distinct levels
+✓ **Combo system:** Reward consecutive actions with score multipliers
+✓ **High score tracking:** Display best score in UI
 
 **Character Drawing Examples:**
 - Knight: Rectangle body + triangle helmet + line sword + circle eyes
@@ -482,5 +535,395 @@ Generate COMPLETE, WORKING Python code (400-600 lines with all features). Make i
 REMEMBER: If the player can't move with arrow keys and WASD, the game is broken!
 
 Return ONLY the Python code, no explanations.`;
+}
+
+/**
+ * Build the prompt for JavaScript/HTML5 Canvas game generation
+ */
+export function buildJavaScriptGamePrompt(
+  request: GameGenerationRequest
+): string {
+  const difficultySettings = {
+    rookie: { health: 5, enemySpeed: 80, enemyCount: "2-3", damage: 20 },
+    veteran: { health: 3, enemySpeed: 120, enemyCount: "3-5", damage: 34 },
+    nightmare: { health: 2, enemySpeed: 160, enemyCount: "5-7", damage: 50 },
+  };
+
+  const toneSettings = {
+    hopeful: { 
+      colors: "bright, saturated colors (blues: #3B82F6, greens: #10B981, yellows: #FBBF24)", 
+      atmosphere: "uplifting and encouraging",
+      playerColor: "#3B82F6",
+      enemyColor: "#EF4444",
+      bgColor: "#1E293B"
+    },
+    gritty: { 
+      colors: "muted, desaturated colors (grays: #6B7280, browns: #78350F, dark reds: #991B1B)", 
+      atmosphere: "harsh and grim",
+      playerColor: "#6B7280",
+      enemyColor: "#7C2D12",
+      bgColor: "#0F172A"
+    },
+    heroic: { 
+      colors: "bold, vibrant colors (golds: #F59E0B, oranges: #F97316, purples: #A855F7)", 
+      atmosphere: "epic and adventurous",
+      playerColor: "#F59E0B",
+      enemyColor: "#DC2626",
+      bgColor: "#1E1B4B"
+    },
+  };
+
+  const genreTemplates = {
+    platformer: {
+      description: "a polished 2D side-scrolling platformer",
+      mechanics: "Gravity physics, platforms, jumping, enemies that patrol",
+    },
+    adventure: {
+      description: "a polished top-down adventure game",
+      mechanics: "8-directional movement, enemy AI, collectibles",
+    },
+    puzzle: {
+      description: "an engaging puzzle game",
+      mechanics: "Grid-based gameplay, mouse/keyboard interaction, match-3 or tile-sliding",
+    },
+  };
+
+  const diff = difficultySettings[request.difficulty];
+  const mood = toneSettings[request.tone];
+  const genreInfo = genreTemplates[request.genre];
+
+  const descriptionSection = request.description 
+    ? `\n\n**User's Vision:**\n"${request.description}"\n\nIMPORTANT: Incorporate the above description into your game design.`
+    : '';
+
+  return `You are an expert game developer. Create a COMPLETE, POLISHED ${genreInfo.description} using HTML5 Canvas and vanilla JavaScript.
+
+**🚨 CRITICAL: CONTROLS MUST WORK! 🚨**
+- Arrow Keys AND WASD for movement
+- Space for actions (jump, fire, etc.)
+- R to restart after win/lose
+
+**Game Theme:**
+- Player: ${request.heroName}
+- Enemy: ${request.enemyName}
+- Goal: ${request.goal}
+- Difficulty: ${request.difficulty}
+- Style: ${mood.colors}
+- Mood: ${mood.atmosphere}${descriptionSection}
+
+**MULTI-LEVEL SYSTEM (REQUIRED):**
+Create AT LEAST 3 levels with increasing difficulty:
+- Level 1: Tutorial/Easy - ${diff.enemyCount.split('-')[0]} enemies
+- Level 2: Intermediate - ${diff.enemyCount.split('-')[1] || '4'} enemies
+- Level 3: Hard - ${parseInt(diff.enemyCount.split('-')[1] || '5') + 2} enemies
+
+Display "Level X/3" in UI. Show "Level X Complete!" between levels.
+
+**Core Features:**
+✓ ${genreInfo.mechanics}
+✓ Particle effects for visual feedback
+✓ Screen shake on impacts
+✓ Health bar with hearts/icons
+✓ Score AND timer displays
+✓ Collectibles (coins, gems, power-ups)
+✓ Invincibility frames (0.5s after damage)
+✓ Smooth animations
+✓ Combo system (consecutive actions multiply score)
+✓ High score tracking
+✓ Game states: INTRO, PLAYING, LEVEL_COMPLETE, WIN, LOSE
+✓ Story text at level starts and end screens
+
+**REQUIRED CODE STRUCTURE:**
+
+\`\`\`html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${request.heroName} Adventure</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, ${mood.bgColor} 0%, #000 100%);
+            font-family: 'Arial', sans-serif;
+        }
+        canvas {
+            border: 2px solid #333;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Game state
+        let gameState = 'INTRO'; // INTRO, PLAYING, LEVEL_COMPLETE, WIN, LOSE
+        let currentLevel = 1;
+        const maxLevels = 3;
+        
+        // Input handling
+        const keys = {};
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            if (e.key === ' ') e.preventDefault();
+        });
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+        
+        // Player class
+        class Player {
+            constructor() {
+                this.x = 50;
+                this.y = 400;
+                this.width = 32;
+                this.height = 32;
+                this.vx = 0;
+                this.vy = 0;
+                this.speed = 5;
+                this.health = ${diff.health};
+                this.maxHealth = ${diff.health};
+                this.invincible = false;
+                this.invincibleTimer = 0;
+            }
+            
+            update() {
+                // Left movement (A or ArrowLeft)
+                if (keys['a'] || keys['A'] || keys['ArrowLeft']) {
+                    this.x -= this.speed;
+                }
+                // Right movement (D or ArrowRight)
+                if (keys['d'] || keys['D'] || keys['ArrowRight']) {
+                    this.x += this.speed;
+                }
+                // Up movement for top-down (W or ArrowUp)
+                if (keys['w'] || keys['W'] || keys['ArrowUp']) {
+                    this.y -= this.speed;
+                }
+                // Down movement for top-down (S or ArrowDown)
+                if (keys['s'] || keys['S'] || keys['ArrowDown']) {
+                    this.y += this.speed;
+                }
+                
+                // Keep on screen
+                this.x = Math.max(0, Math.min(this.x, canvas.width - this.width));
+                this.y = Math.max(0, Math.min(this.y, canvas.height - this.height));
+                
+                // Update invincibility
+                if (this.invincible) {
+                    this.invincibleTimer--;
+                    if (this.invincibleTimer <= 0) {
+                        this.invincible = false;
+                    }
+                }
+            }
+            
+            draw() {
+                // Draw player character with shapes (not just rectangle)
+                // Add visual details for "${request.heroName}"
+                ctx.save();
+                if (this.invincible && Math.floor(Date.now() / 100) % 2 === 0) {
+                    ctx.globalAlpha = 0.5; // Flash effect
+                }
+                ctx.fillStyle = '${mood.playerColor}';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                // Add more details here (eyes, limbs, etc.)
+                ctx.restore();
+            }
+            
+            takeDamage(amount) {
+                if (!this.invincible) {
+                    this.health -= amount;
+                    this.invincible = true;
+                    this.invincibleTimer = 30; // 0.5 seconds at 60 FPS
+                    screenShake = 5;
+                    // Add particles
+                }
+            }
+        }
+        
+        // Enemy, Particle, Collectible classes...
+        // (Implement these similarly)
+        
+        // Game loop
+        let lastTime = 0;
+        let screenShake = 0;
+        let score = 0;
+        let gameTime = 0;
+        
+        function gameLoop(timestamp) {
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+            
+            // Clear screen
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Apply screen shake
+            if (screenShake > 0) {
+                ctx.save();
+                ctx.translate(
+                    Math.random() * screenShake - screenShake / 2,
+                    Math.random() * screenShake - screenShake / 2
+                );
+                screenShake *= 0.9;
+            }
+            
+            if (gameState === 'INTRO') {
+                // Draw intro screen
+                ctx.fillStyle = 'white';
+                ctx.font = '48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('${request.heroName}', canvas.width / 2, 200);
+                ctx.font = '24px Arial';
+                ctx.fillText('Goal: ${request.goal}', canvas.width / 2, 300);
+                ctx.fillText('Press SPACE to Start', canvas.width / 2, 400);
+                
+                if (keys[' ']) {
+                    gameState = 'PLAYING';
+                    resetLevel();
+                }
+            } else if (gameState === 'PLAYING') {
+                // Update game
+                gameTime++;
+                player.update();
+                // Update enemies, check collisions, etc.
+                
+                // Draw everything
+                player.draw();
+                // Draw enemies, collectibles, etc.
+                
+                // Draw UI
+                drawUI();
+                
+                // Check level complete
+                if (levelComplete()) {
+                    if (currentLevel < maxLevels) {
+                        gameState = 'LEVEL_COMPLETE';
+                    } else {
+                        gameState = 'WIN';
+                    }
+                }
+                
+                // Check game over
+                if (player.health <= 0) {
+                    gameState = 'LOSE';
+                }
+            } else if (gameState === 'LEVEL_COMPLETE') {
+                ctx.fillStyle = 'white';
+                ctx.font = '48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(\`Level \${currentLevel} Complete!\`, canvas.width / 2, 250);
+                ctx.font = '24px Arial';
+                ctx.fillText('Press SPACE for Next Level', canvas.width / 2, 350);
+                
+                if (keys[' ']) {
+                    currentLevel++;
+                    resetLevel();
+                    gameState = 'PLAYING';
+                }
+            } else if (gameState === 'WIN') {
+                // Draw win screen
+                ctx.fillStyle = '#10B981';
+                ctx.font = '48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Victory!', canvas.width / 2, 200);
+                ctx.font = '24px Arial';
+                ctx.fillText(\`Final Score: \${score}\`, canvas.width / 2, 300);
+                ctx.fillText(\`Time: \${Math.floor(gameTime / 60)}s\`, canvas.width / 2, 340);
+                ctx.fillText('Press R to Play Again', canvas.width / 2, 400);
+                
+                if (keys['r'] || keys['R']) {
+                    resetGame();
+                }
+            } else if (gameState === 'LOSE') {
+                // Draw lose screen
+                ctx.fillStyle = '#EF4444';
+                ctx.font = '48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Game Over', canvas.width / 2, 200);
+                ctx.font = '24px Arial';
+                ctx.fillText(\`Score: \${score}\`, canvas.width / 2, 300);
+                ctx.fillText('Press R to Try Again', canvas.width / 2, 380);
+                
+                if (keys['r'] || keys['R']) {
+                    resetGame();
+                }
+            }
+            
+            if (screenShake > 0) {
+                ctx.restore();
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function drawUI() {
+            // Draw health bar
+            ctx.fillStyle = '#333';
+            ctx.fillRect(10, 10, 200, 20);
+            ctx.fillStyle = '#EF4444';
+            ctx.fillRect(10, 10, (player.health / player.maxHealth) * 200, 20);
+            
+            // Draw score and level
+            ctx.fillStyle = 'white';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(\`Score: \${score}\`, 10, 50);
+            ctx.fillText(\`Level: \${currentLevel}/\${maxLevels}\`, 10, 75);
+            ctx.fillText(\`Time: \${Math.floor(gameTime / 60)}s\`, 10, 100);
+        }
+        
+        function resetLevel() {
+            player = new Player();
+            // Reset enemies, collectibles for new level
+            // Increase difficulty based on currentLevel
+            gameTime = 0;
+        }
+        
+        function resetGame() {
+            currentLevel = 1;
+            score = 0;
+            resetLevel();
+            gameState = 'INTRO';
+        }
+        
+        function levelComplete() {
+            // Check if level objectives are met
+            return false; // Implement logic
+        }
+        
+        // Initialize
+        let player = new Player();
+        resetLevel();
+        
+        // Start game loop
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
+\`\`\`
+
+**IMPORTANT:**
+- Return ONLY a SINGLE, COMPLETE HTML file (600-800 lines)
+- All JavaScript must be in the <script> tag
+- Include proper collision detection
+- Add particle effects, screen shake, smooth animations
+- Make characters visually distinct (not just colored rectangles)
+- Add collectibles, power-ups, and enemies
+- Implement ALL 3 levels with progressive difficulty
+- Make it FUN and POLISHED!
+
+REMEMBER: If controls don't work, the game is broken! Test arrow keys AND WASD.
+
+Return ONLY the complete HTML file, no explanations.`;
 }
 
