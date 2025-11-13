@@ -40,7 +40,7 @@ export function GamePlayer({ gameId, gameTitle, language = "python" }: GamePlaye
       >
         <div className="w-full h-[600px] overflow-hidden relative">
           <iframe
-            src={`/api/play/${gameId}/`}
+            src={`/api/play/${gameId}`}
             className="w-full h-full border-0 pointer-events-auto"
             title={gameTitle}
             sandbox="allow-scripts allow-same-origin allow-downloads allow-forms allow-modals allow-pointer-lock allow-top-navigation"
