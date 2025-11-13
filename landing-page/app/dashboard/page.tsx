@@ -1,5 +1,9 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
+"use client";
+
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { Game, SubscriptionTier } from "@/lib/db-types";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,30 +14,94 @@ import { DashboardNav } from "@/components/dashboard-nav";
 import { SUBSCRIPTION_LIMITS } from "@/lib/subscription-limits";
 import { Sparkles, Zap, Rocket } from "lucide-react";
 
-export default async function DashboardPage() {
-  const supabase = await createClient();
+// Counter animation component
+function AnimatedCounter({ value, duration = 1 }: { value: number; duration?: number }) {
+  const [count, setCount] = useState(0);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  useEffect(() => {
+    let start = 0;
+    const end = value;
+    const incrementTime = (duration * 1000) / end;
+    const timer = setInterval(() => {
+      start += 1;
+      setCount(start);
+      if (start >= end) clearInterval(timer);
+    }, incrementTime);
 
-  if (!user) {
-    redirect("/auth/sign-in");
+    return () => clearInterval(timer);
+  }, [value, duration]);
+
+  return <span>{count}</span>;
+}
+
+// Animation variants
+const fadeInUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
   }
+};
 
-  // Fetch user's games
-  const { data: games } = await supabase
-    .from("games")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("updated_at", { ascending: false });
+export default function DashboardPage() {
+  const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+  const [games, setGames] = useState<Game[]>([]);
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch user profile
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+  useEffect(() => {
+    const loadData = async () => {
+      const supabase = createClient();
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        router.push("/auth/sign-in");
+        return;
+      }
+
+      setUser(user);
+
+      // Fetch user's games
+      const { data: gamesData } = await supabase
+        .from("games")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("updated_at", { ascending: false });
+
+      // Fetch user profile
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      setGames(gamesData || []);
+      setProfile(profileData);
+      setLoading(false);
+    };
+
+    loadData();
+  }, [router]);
+
+  if (loading) {
+    return (
+      <>
+        <DashboardNav />
+        <div className="container mx-auto px-4 py-8 text-center">
+          <p>Loading...</p>
+        </div>
+      </>
+    );
+  }
 
   const subscriptionTier = (profile?.subscription_tier || "free") as SubscriptionTier;
   const gamesCreated = profile?.games_created_this_month || 0;
@@ -110,9 +178,19 @@ export default async function DashboardPage() {
         <h2 className="text-2xl font-bold mb-4">Your Games</h2>
 
         {games && games.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            initial="hidden"
+            animate="visible"
+            variants={staggerContainer}
+          >
             {games.map((game: Game) => (
-              <Card key={game.id} className="hover:shadow-lg transition-shadow">
+              <motion.div 
+                key={game.id}
+                variants={fadeInUp}
+                whileHover={{ y: -5, scale: 1.02, transition: { duration: 0.2 } }}
+              >
+                <Card className="hover:shadow-lg transition-shadow h-full">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -144,8 +222,9 @@ export default async function DashboardPage() {
                   <GameCardActions game={game} profileUsername={profile?.username} />
                 </CardContent>
               </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         ) : (
           <Card className="p-12 text-center">
             <p className="text-muted-foreground mb-4">
@@ -159,36 +238,49 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Games</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-bold">{games?.length || 0}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Likes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-bold">
-              {games?.reduce((sum, game) => sum + (game.like_count || 0), 0) || 0}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Plays</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-bold">
-              {games?.reduce((sum, game) => sum + (game.play_count || 0), 0) || 0}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <motion.div 
+        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        initial="hidden"
+        animate="visible"
+        variants={staggerContainer}
+      >
+        <motion.div variants={fadeInUp} whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Total Games</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-4xl font-bold">
+                <AnimatedCounter value={games?.length || 0} />
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+        <motion.div variants={fadeInUp} whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Total Likes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-4xl font-bold">
+                <AnimatedCounter value={games?.reduce((sum, game) => sum + (game.like_count || 0), 0) || 0} />
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+        <motion.div variants={fadeInUp} whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Total Plays</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-4xl font-bold">
+                <AnimatedCounter value={games?.reduce((sum, game) => sum + (game.play_count || 0), 0) || 0} />
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </motion.div>
     </div>
     </>
   );
