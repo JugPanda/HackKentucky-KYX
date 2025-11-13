@@ -4,7 +4,7 @@ import { buildGameGenerationPrompt, buildJavaScriptGamePrompt, type GameGenerati
 
 // Force dynamic rendering and disable caching
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60; // Allow up to 60 seconds for AI generation
+export const maxDuration = 60; // Max for Vercel Hobby plan (use 300 for Pro)
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -87,7 +87,8 @@ You write complete, production-ready games that feel satisfying to play.`;
         },
       ],
       temperature: 0.7, // Slightly higher for more creative, varied games
-      max_tokens: language === "javascript" ? 5000 : 4500, // JavaScript HTML files can be longer
+      max_tokens: language === "javascript" ? 3500 : 3000, // Reduced for faster generation
+      timeout: 50000, // 50 second timeout for OpenAI API
     });
 
     const generatedCode = completion.choices[0]?.message?.content;
@@ -182,6 +183,14 @@ You write complete, production-ready games that feel satisfying to play.`;
       return NextResponse.json(
         { error: "OpenAI API key is invalid or missing" },
         { status: 500 }
+      );
+    }
+
+    // Handle timeout errors
+    if (error instanceof Error && (error.message.includes("timeout") || error.message.includes("timed out"))) {
+      return NextResponse.json(
+        { error: "Game generation timed out. Try again or simplify your game description." },
+        { status: 504 }
       );
     }
 

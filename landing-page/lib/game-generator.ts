@@ -198,45 +198,8 @@ NEVER create a game without full keyboard controls!
 
 **Core Gameplay:**${genreInfo.mechanics}
 
-**MULTI-LEVEL PROGRESSION (CRITICAL):**
-Create AT LEAST 3 distinct levels with increasing difficulty:
-
-**Level 1 (Tutorial/Easy):**
-- ${difficultySettings[request.difficulty].enemyCount.split('-')[0]} enemies
-- Simple layout with clear paths
-- Introduce core mechanics
-- Story text: "Level 1: The Beginning"
-
-**Level 2 (Intermediate):**
-- ${difficultySettings[request.difficulty].enemyCount.split('-')[1] || '4'} enemies
-- More complex layout with obstacles
-- Add new enemy types or behaviors
-- Story text: "Level 2: The Challenge Grows"
-
-**Level 3 (Hard):**
-- ${parseInt(difficultySettings[request.difficulty].enemyCount.split('-')[1] || '5') + 2} enemies
-- Most challenging layout
-- Boss enemy or final gauntlet
-- Story text: "Level 3: The Final Stand"
-
-**Level System Implementation:**
-\`\`\`python
-# Track current level
-current_level = 1
-max_levels = 3
-
-# Level transitions
-def check_level_complete():
-    # Platformer: Reached goal
-    # Adventure: Defeated all enemies
-    # Puzzle: Completed objective
-    if level_complete_condition:
-        current_level += 1
-        if current_level > max_levels:
-            game_state = "WIN"
-        else:
-            reset_level()  # New level with harder enemies
-\`\`\`
+**MULTI-LEVEL PROGRESSION:**
+Create 3 levels with progressive difficulty. Track current_level (1-3) and reset with harder enemies when complete.
 
 **Design Philosophy:**
 ${genreInfo.gameplay}
@@ -468,32 +431,16 @@ player.rect.y = max(0, min(player.rect.y, 600 - player.rect.height))
 4. LOSE - Game over screen with encouragement
 
 **Must Include:**
-✓ Intro screen with story/goal
-✓ **WORKING INPUT:** Arrow keys AND WASD both work for movement
-✓ **COLLISION DETECTION:** Player vs enemies, collectibles, platforms, boundaries
-✓ **3 LEVELS MINIMUM:** Each with different layouts and progressive difficulty
-✓ **Level transition:** Clear "Level X Complete!" screen before next level
-✓ **Level counter display:** Show "Level X/3" in UI
-✓ Detailed character art (drawn with shapes, not rectangles)
-✓ Detailed enemy art matching "${request.enemyName}"
-✓ At least 1 collectible type (coins, gems, etc.)
-✓ At least 1 power-up type (health, speed, invincibility)
-✓ Particle effects on all actions
-✓ Screen shake on impacts
-✓ Health bar with heart/icon visuals
-✓ Score display AND timer (for speed-runs)
-✓ **Enemy collision damage:** Player loses health when hitting enemies
-✓ **Invincibility frames:** 0.5 seconds after taking damage
-✓ **Boundary checking:** Player can't move off screen
-✓ Smooth enemy AI with varied behaviors (level 1: slow, level 3: fast/aggressive)
-✓ Story text at key moments and level starts
-✓ Win screen with story conclusion AND final stats (time, score)
-✓ Lose screen with retry encouragement AND progress shown
-✓ Background gradient with details (change colors per level)
-✓ Platform/environment decorations (more complex each level)
-✓ Progressive difficulty with distinct levels
-✓ **Combo system:** Reward consecutive actions with score multipliers
-✓ **High score tracking:** Display best score in UI
+✓ WORKING Arrow keys AND WASD movement
+✓ COLLISION DETECTION (enemies, collectibles, boundaries)
+✓ 3 LEVELS with "Level X/3" counter and "Level Complete!" screens
+✓ Detailed character/enemy art with ${mood.playerColor} and ${mood.enemyColor}
+✓ Collectibles, power-ups, particles, screen shake
+✓ Health bar, score, timer
+✓ Invincibility frames after damage
+✓ Enemy AI (slow→fast across levels)
+✓ Intro, Win (with stats), Lose screens
+✓ Combo system and high score
 
 **Character Drawing Examples:**
 - Knight: Rectangle body + triangle helmet + line sword + circle eyes
@@ -611,27 +558,13 @@ export function buildJavaScriptGamePrompt(
 - Style: ${mood.colors}
 - Mood: ${mood.atmosphere}${descriptionSection}
 
-**MULTI-LEVEL SYSTEM (REQUIRED):**
-Create AT LEAST 3 levels with increasing difficulty:
-- Level 1: Tutorial/Easy - ${diff.enemyCount.split('-')[0]} enemies
-- Level 2: Intermediate - ${diff.enemyCount.split('-')[1] || '4'} enemies
-- Level 3: Hard - ${parseInt(diff.enemyCount.split('-')[1] || '5') + 2} enemies
-
-Display "Level X/3" in UI. Show "Level X Complete!" between levels.
-
-**Core Features:**
-✓ ${genreInfo.mechanics}
-✓ Particle effects for visual feedback
-✓ Screen shake on impacts
-✓ Health bar with hearts/icons
-✓ Score AND timer displays
-✓ Collectibles (coins, gems, power-ups)
-✓ Invincibility frames (0.5s after damage)
-✓ Smooth animations
-✓ Combo system (consecutive actions multiply score)
-✓ High score tracking
-✓ Game states: INTRO, PLAYING, LEVEL_COMPLETE, WIN, LOSE
-✓ Story text at level starts and end screens
+**FEATURES:**
+- 3 levels with "Level X/3" display and "Complete!" screens
+- ${genreInfo.mechanics}
+- Particles, screen shake, health bar, score, timer
+- Collectibles, power-ups, invincibility frames
+- Combos and high score
+- States: INTRO, PLAYING, LEVEL_COMPLETE, WIN, LOSE
 
 **REQUIRED CODE STRUCTURE:**
 
