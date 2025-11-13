@@ -195,18 +195,25 @@ export async function GET(
       "Cross-Origin-Resource-Policy": "cross-origin",
     };
 
-    // For HTML files, inject a <base> tag to fix relative paths and hide debug console
+    // For HTML files, inject a <base> tag to fix relative paths
     if (contentType === "text/html") {
       let html = new TextDecoder().decode(arrayBuffer);
       const baseUrl = `/api/play/${gameId}/`;
       
-      // Inject base tag and CSS to hide debug console
-      const injectedHead = `<head>
-    <base href="${baseUrl}">
+      // Check if this is a Pygbag (Python) game by looking for pygbag-specific elements
+      const isPygbagGame = html.includes("pygbag") || html.includes("pyconsole");
+      
+      // Inject base tag and optionally hide Pygbag debug console
+      let injectedHead = `<head>
+    <base href="${baseUrl}">`;
+      
+      if (isPygbagGame) {
+        injectedHead += `
     <style>
       /* Hide Pygbag debug console for production */
       #pyconsole, #system, #transfer, #info, #box { display: none !important; }
     </style>`;
+      }
       
       if (html.includes("<head>")) {
         html = html.replace("<head>", injectedHead);
