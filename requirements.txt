@@ -1,6 +1,0 @@
-pygame-ce>=2.3.0
-pygbag>=0.6.0
-
-# Note: If you have the original pygame installed, uninstall it first:
-# pip uninstall pygame
-# Then install pygame-ce which provides the pygame module
