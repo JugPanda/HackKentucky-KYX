@@ -607,6 +607,7 @@ function MadlibLabPageContent() {
           enemyName: formData.nemesisName || template.enemyName,
           goal: formData.victoryCondition || template.goal,
           tone: formData.tone,
+          language: gameLanguage, // Use selected language (python or javascript)
         });
         
         // Update game with the injected code
@@ -617,7 +618,7 @@ function MadlibLabPageContent() {
           body: JSON.stringify({
             gameId: game.id,
             generatedCode: injectedCode,
-            language: "javascript", // Templates use JavaScript/HTML5 Canvas
+            language: gameLanguage, // Use selected language
           }),
         });
         

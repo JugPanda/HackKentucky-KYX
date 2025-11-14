@@ -6,9 +6,20 @@ import { baseArcadeCode } from './base-arcade';
 import { baseRPGCode } from './base-rpg';
 import { baseRacingCode } from './base-racing';
 import { baseEducationalCode } from './base-educational';
+import { basePlatformerCodePython } from './base-platformer-python';
+import { baseShooterCodePython } from './base-shooter-python';
+import { 
+  baseAdventureCodePython, 
+  basePuzzleCodePython,
+  baseRPGCodePython,
+  baseRacingCodePython,
+  baseEducationalCodePython,
+  baseArcadeCodePython
+} from './base-python-templates';
 import { GameTemplate, TemplateCategory } from '../game-templates';
 
-const BASE_CODE_MAP: Record<TemplateCategory, string> = {
+// JavaScript/HTML5 Canvas templates
+const BASE_CODE_MAP_JS: Record<TemplateCategory, string> = {
   platformer: basePlatformerCode,
   adventure: baseAdventureCode,
   puzzle: basePuzzleCode,
@@ -17,6 +28,18 @@ const BASE_CODE_MAP: Record<TemplateCategory, string> = {
   racing: baseRacingCode,
   educational: baseEducationalCode,
   arcade: baseArcadeCode,
+};
+
+// Python/Pygame templates
+const BASE_CODE_MAP_PYTHON: Record<TemplateCategory, string> = {
+  platformer: basePlatformerCodePython,
+  adventure: baseAdventureCodePython,
+  puzzle: basePuzzleCodePython,
+  rpg: baseRPGCodePython,
+  shooter: baseShooterCodePython,
+  racing: baseRacingCodePython,
+  educational: baseEducationalCodePython,
+  arcade: baseArcadeCodePython,
 };
 
 const DIFFICULTY_MAP = {
@@ -37,16 +60,22 @@ interface InjectionParams {
   enemyName?: string;
   goal?: string;
   tone?: 'hopeful' | 'gritty' | 'heroic';
+  language?: 'python' | 'javascript';
 }
 
 export function injectTemplateCode(params: InjectionParams): string {
-  const { template, playerName, enemyName, goal, tone } = params;
+  const { template, playerName, enemyName, goal, tone, language = 'javascript' } = params;
   
-  // Get base code for category
-  let code = BASE_CODE_MAP[template.category];
+  // Get base code for category and language
+  const codeMap = language === 'python' ? BASE_CODE_MAP_PYTHON : BASE_CODE_MAP_JS;
+  let code = codeMap[template.category];
   
   if (!code) {
-    throw new Error(`No base code found for category: ${template.category}`);
+    // Fallback to JavaScript if Python version doesn't exist
+    code = BASE_CODE_MAP_JS[template.category];
+    if (!code) {
+      throw new Error(`No base code found for category: ${template.category} and language: ${language}`);
+    }
   }
   
   // Get colors based on tone
@@ -72,7 +101,8 @@ export function injectTemplateCode(params: InjectionParams): string {
   return code;
 }
 
-export function getBaseCodeForCategory(category: TemplateCategory): string {
-  return BASE_CODE_MAP[category] || '';
+export function getBaseCodeForCategory(category: TemplateCategory, language: 'python' | 'javascript' = 'javascript'): string {
+  const codeMap = language === 'python' ? BASE_CODE_MAP_PYTHON : BASE_CODE_MAP_JS;
+  return codeMap[category] || '';
 }
 
