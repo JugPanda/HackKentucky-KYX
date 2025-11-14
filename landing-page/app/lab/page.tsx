@@ -551,37 +551,46 @@ function MadlibLabPageContent() {
         game = createData.game;
       }
 
-      // Step 2: Start async AI generation
-      setBuildStatus({ loading: true, message: "Starting AI game generation (this may take 1-2 minutes)..." });
+      // Step 2: AI generation or skip for templates
+      const isUsingTemplate = loadedTemplate || templateId;
       
-      const asyncGenRes = await fetch("/api/games/generate-async", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          gameId: game.id,
-          gameRequest: {
-            heroName: formData.survivorName || "Hero",
-            enemyName: formData.nemesisName || "Enemy",
-            goal: formData.victoryCondition || "Complete the adventure",
-            tone: formData.tone,
-            difficulty: formData.difficulty,
-            genre: formData.genre,
-            description: promptText || undefined,
-            playerSpriteUrl: playerSpriteUrl || undefined,
-            enemySpriteUrl: enemySpriteUrl || undefined,
-            language: gameLanguage,
-          },
-        }),
-      });
+      if (!isUsingTemplate) {
+        // Only generate with AI if NOT using a template
+        setBuildStatus({ loading: true, message: "Starting AI game generation (this may take 1-2 minutes)..." });
+        
+        const asyncGenRes = await fetch("/api/games/generate-async", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            gameId: game.id,
+            gameRequest: {
+              heroName: formData.survivorName || "Hero",
+              enemyName: formData.nemesisName || "Enemy",
+              goal: formData.victoryCondition || "Complete the adventure",
+              tone: formData.tone,
+              difficulty: formData.difficulty,
+              genre: formData.genre,
+              description: promptText || undefined,
+              playerSpriteUrl: playerSpriteUrl || undefined,
+              enemySpriteUrl: enemySpriteUrl || undefined,
+              language: gameLanguage,
+            },
+          }),
+        });
 
-      if (!asyncGenRes.ok) {
-        const errorData = await asyncGenRes.json();
-        throw new Error(errorData.error || "Failed to start generation");
+        if (!asyncGenRes.ok) {
+          const errorData = await asyncGenRes.json();
+          throw new Error(errorData.error || "Failed to start generation");
+        }
+
+        // Step 3: Poll for completion
+        setBuildStatus({ loading: true, message: "AI is generating your game code..." });
+        await pollGenerationStatus(game.id);
+      } else {
+        // Templates skip AI generation - they're pre-configured!
+        setBuildStatus({ loading: true, message: "✨ Using template - no AI generation needed!" });
+        await new Promise(resolve => setTimeout(resolve, 500)); // Brief pause for UX
       }
-
-      // Step 3: Poll for completion
-      setBuildStatus({ loading: true, message: "AI is generating your game code..." });
-      await pollGenerationStatus(game.id);
 
       // Step 4: Trigger the build
       setBuildStatus({ loading: true, message: "Building your game..." });
@@ -1049,8 +1058,16 @@ Be specific about genre, characters, and goal!"
                   <>
                     {isSignedIn ? (
                       <>
-                        <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
-                          ✨ <strong>Ready to build!</strong> Click below to create your playable game and share it with the community.
+                        <div className={`rounded-2xl border px-4 py-3 text-sm ${
+                          loadedTemplate || templateId 
+                            ? "border-blue-500/30 bg-blue-500/10 text-blue-100"
+                            : "border-emerald-500/30 bg-emerald-500/10 text-emerald-100"
+                        }`}>
+                          {loadedTemplate || templateId ? (
+                            <>⚡ <strong>Template ready!</strong> Using "{loadedTemplate}" - no AI generation needed. Click below to build instantly!</>
+                          ) : (
+                            <>✨ <strong>Ready to build!</strong> Click below to create your playable game with AI (1-2 minutes).</>
+                          )}
                         </div>
                         <div className="flex gap-2">
                           <Button
@@ -1064,8 +1081,10 @@ Be specific about genre, characters, and goal!"
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 {buildStatus.message || "Building..."}
                               </>
+                            ) : loadedTemplate || templateId ? (
+                              "⚡ Build Template Instantly →"
                             ) : (
-                              "Build & Publish Game →"
+                              "✨ Generate & Build with AI →"
                             )}
                           </Button>
                         </div>
