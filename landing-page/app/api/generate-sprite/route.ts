@@ -53,7 +53,7 @@ Style: ${artStyle}, video game sprite, game asset, ${description}`;
       style: "vivid",
     });
 
-    const imageUrl = response.data[0]?.url;
+    const imageUrl = response.data?.[0]?.url;
 
     if (!imageUrl) {
       throw new Error("Failed to generate image");
@@ -62,7 +62,7 @@ Style: ${artStyle}, video game sprite, game asset, ${description}`;
     return NextResponse.json({
       ok: true,
       imageUrl,
-      revisedPrompt: response.data[0]?.revised_prompt,
+      revisedPrompt: response.data?.[0]?.revised_prompt,
     });
   } catch (error) {
     console.error("Sprite generation error:", error);
