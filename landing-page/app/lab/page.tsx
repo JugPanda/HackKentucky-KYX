@@ -90,6 +90,9 @@ function MadlibLabPageContent() {
   const [enemySpritePreview, setEnemySpritePreview] = useState<string | null>(null);
   const [gameLanguage, setGameLanguage] = useState<"python" | "javascript">("python");
   const [loadedTemplate, setLoadedTemplate] = useState<string | null>(null);
+  const [creationMode, setCreationMode] = useState<"choose" | "ai" | "template" | null>(
+    templateId ? "template" : remixGameId ? "ai" : editGameId ? "ai" : "choose"
+  );
   
   // Subscription state
   const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>("free");
@@ -624,21 +627,146 @@ function MadlibLabPageContent() {
     <div className="min-h-screen bg-[#010409] text-slate-100">
       {isSignedIn && <DashboardNav />}
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-12">
+        
+        {/* Creation Mode Chooser */}
+        {creationMode === "choose" && (
+          <div className="space-y-8">
+            <div className="space-y-4 text-center">
+              <Badge className="border-emerald-500/40 bg-emerald-500/10 text-emerald-100 mx-auto w-fit">
+                Choose Your Path
+              </Badge>
+              <h1 className="text-4xl font-semibold text-white">
+                How would you like to create your game?
+              </h1>
+              <p className="text-lg text-slate-300 max-w-2xl mx-auto">
+                Start with a professional template or let AI generate a custom game for you
+              </p>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2 max-w-4xl mx-auto">
+              {/* Templates Option */}
+              <Card className="border-blue-500/40 bg-blue-950/20 hover:border-blue-500/60 transition-all cursor-pointer group"
+                onClick={() => router.push('/templates')}>
+                <CardContent className="p-8 space-y-6">
+                  <div className="space-y-3">
+                    <div className="text-5xl">⚡</div>
+                    <h2 className="text-2xl font-semibold text-white group-hover:text-blue-300 transition-colors">
+                      Start from Template
+                    </h2>
+                    <p className="text-slate-400">
+                      Choose from 50+ professional game templates with instant preview
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm text-emerald-300">
+                      <span className="text-lg">✓</span>
+                      <span>Instant - No waiting</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-emerald-300">
+                      <span className="text-lg">✓</span>
+                      <span>Professional quality</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-emerald-300">
+                      <span className="text-lg">✓</span>
+                      <span>Beautiful 3D card effects</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-emerald-300">
+                      <span className="text-lg">✓</span>
+                      <span>Fully customizable</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-emerald-300">
+                      <span className="text-lg">✓</span>
+                      <span>8 categories to choose from</span>
+                    </div>
+                  </div>
+
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" size="lg">
+                    Browse 50+ Templates →
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* AI Generation Option */}
+              <Card className="border-purple-500/40 bg-purple-950/20 hover:border-purple-500/60 transition-all cursor-pointer group"
+                onClick={() => setCreationMode("ai")}>
+                <CardContent className="p-8 space-y-6">
+                  <div className="space-y-3">
+                    <div className="text-5xl">✨</div>
+                    <h2 className="text-2xl font-semibold text-white group-hover:text-purple-300 transition-colors">
+                      Generate with AI
+                    </h2>
+                    <p className="text-slate-400">
+                      Describe your game idea and let AI create custom code for you
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm text-blue-300">
+                      <span className="text-lg">✓</span>
+                      <span>Fully custom games</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-blue-300">
+                      <span className="text-lg">✓</span>
+                      <span>Unique to your vision</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-blue-300">
+                      <span className="text-lg">✓</span>
+                      <span>AI sprite generation</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-yellow-300">
+                      <span className="text-lg">⏱</span>
+                      <span>Takes 1-2 minutes</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-yellow-300">
+                      <span className="text-lg">📊</span>
+                      <span>Live progress updates</span>
+                    </div>
+                  </div>
+
+                  <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white" size="lg">
+                    Create with AI →
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="text-center">
+              <p className="text-sm text-slate-500">
+                💡 <strong>Tip:</strong> Templates are instant and perfect for getting started quickly. 
+                AI generation is great for unique, custom games.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Show original creator when mode is selected */}
+        {creationMode !== "choose" && (
+          <>
         <div className="space-y-4">
-          {!isSignedIn && (
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-slate-100"
-            >
-              <ArrowLeft className="h-4 w-4" /> Back to landing page
-            </Link>
-          )}
+          <div className="flex items-center justify-between">
+            {!isSignedIn ? (
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-slate-100"
+              >
+                <ArrowLeft className="h-4 w-4" /> Back to landing page
+              </Link>
+            ) : (
+              <button
+                onClick={() => setCreationMode("choose")}
+                className="inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-slate-100"
+              >
+                <ArrowLeft className="h-4 w-4" /> Change creation method
+              </button>
+            )}
+          </div>
           <div className="space-y-3">
             <Badge className="border-emerald-500/40 bg-emerald-500/10 text-emerald-100">
-              {loadedTemplate ? `Template: ${loadedTemplate}` : remixGameId ? "Remix Game" : "Game Creator"}
+              {loadedTemplate ? `Template: ${loadedTemplate}` : remixGameId ? "Remix Game" : creationMode === "ai" ? "AI Generation" : "Game Creator"}
             </Badge>
             <h1 className="text-4xl font-semibold text-white">
-              {editGameId ? "Edit Your Game" : loadedTemplate ? `Customize "${loadedTemplate}"` : remixGameId ? "Remix Community Game" : "Create Your Game"}
+              {editGameId ? "Edit Your Game" : loadedTemplate ? `Customize "${loadedTemplate}"` : remixGameId ? "Remix Community Game" : creationMode === "ai" ? "Create with AI" : "Create Your Game"}
             </h1>
             <p className="text-lg text-slate-300">
               {editGameId 
@@ -1020,6 +1148,8 @@ Be specific about genre, characters, and goal!"
 
           </div>
         </section>
+        </>
+        )}
 
       </main>
     </div>
