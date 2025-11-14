@@ -141,7 +141,7 @@ export function SpriteGeneratorDialog({
               {examples.slice(0, 4).map((example, i) => (
                 <Badge
                   key={i}
-                  variant="outline"
+                  variant="default"
                   className="cursor-pointer hover:bg-accent"
                   onClick={() => handleExampleClick(example)}
                 >
