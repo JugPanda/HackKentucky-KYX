@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card";
 import {
   GAME_TEMPLATES,
   getAllCategories,
@@ -309,70 +310,80 @@ function TemplateCard({
   };
 
   return (
-    <Card 
-      className={`border-slate-800/70 bg-slate-950/40 hover:border-slate-600/70 transition-all group ${
-        featured ? "ring-2 ring-yellow-500/30" : ""
-      }`}
-    >
-      <CardHeader>
-        <div className="flex items-start justify-between mb-2">
-          <span className="text-3xl">{categoryInfo.icon}</span>
-          {featured && (
-            <Badge className="border-yellow-500/40 bg-yellow-500/10 text-yellow-200">
-              <Star className="w-3 h-3 mr-1" />
-              Featured
-            </Badge>
-          )}
-        </div>
-        <CardTitle className="text-xl text-white group-hover:text-blue-300 transition-colors">
-          {template.name}
-        </CardTitle>
-        <p className="text-sm text-slate-400">{template.description}</p>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex gap-2 flex-wrap">
-          <Badge className="border-slate-700 bg-slate-800/50 text-slate-300 text-xs">
-            {categoryInfo.name}
-          </Badge>
-          <Badge className={`text-xs ${difficultyColors[template.difficulty]}`}>
-            {template.difficulty}
-          </Badge>
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-xs font-semibold text-slate-400 uppercase">Key Features:</p>
-          <div className="flex flex-wrap gap-1">
-            {template.features.slice(0, 3).map((feature, i) => (
-              <span
-                key={i}
-                className="text-xs px-2 py-1 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20"
-              >
-                {feature}
-              </span>
-            ))}
-            {template.features.length > 3 && (
-              <span className="text-xs px-2 py-1 rounded bg-slate-800/50 text-slate-400">
-                +{template.features.length - 3} more
-              </span>
-            )}
-          </div>
-        </div>
-
-        {template.usageCount && (
-          <p className="text-xs text-slate-500">
-            <TrendingUp className="w-3 h-3 inline mr-1" />
-            Used {template.usageCount.toLocaleString()} times
-          </p>
-        )}
-
-        <Button 
-          onClick={onUse}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+    <CardContainer className="w-full">
+      <CardBody className="w-full">
+        <Card 
+          className={`border-slate-800/70 bg-slate-950/40 hover:border-slate-600/70 transition-all group ${
+            featured ? "ring-2 ring-yellow-500/30" : ""
+          }`}
         >
-          Use This Template
-        </Button>
-      </CardContent>
-    </Card>
+          <CardItem translateZ="50" className="w-full">
+            <CardHeader>
+              <div className="flex items-start justify-between mb-2">
+                <span className="text-3xl">{categoryInfo.icon}</span>
+                {featured && (
+                  <Badge className="border-yellow-500/40 bg-yellow-500/10 text-yellow-200">
+                    <Star className="w-3 h-3 mr-1" />
+                    Featured
+                  </Badge>
+                )}
+              </div>
+              <CardTitle className="text-xl text-white group-hover:text-blue-300 transition-colors">
+                {template.name}
+              </CardTitle>
+              <p className="text-sm text-slate-400">{template.description}</p>
+            </CardHeader>
+          </CardItem>
+          <CardItem translateZ="30" className="w-full">
+            <CardContent className="space-y-4">
+              <div className="flex gap-2 flex-wrap">
+                <Badge className="border-slate-700 bg-slate-800/50 text-slate-300 text-xs">
+                  {categoryInfo.name}
+                </Badge>
+                <Badge className={`text-xs ${difficultyColors[template.difficulty]}`}>
+                  {template.difficulty}
+                </Badge>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-slate-400 uppercase">Key Features:</p>
+                <div className="flex flex-wrap gap-1">
+                  {template.features.slice(0, 3).map((feature, i) => (
+                    <span
+                      key={i}
+                      className="text-xs px-2 py-1 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20"
+                    >
+                      {feature}
+                    </span>
+                  ))}
+                  {template.features.length > 3 && (
+                    <span className="text-xs px-2 py-1 rounded bg-slate-800/50 text-slate-400">
+                      +{template.features.length - 3} more
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {template.usageCount && (
+                <p className="text-xs text-slate-500">
+                  <TrendingUp className="w-3 h-3 inline mr-1" />
+                  Used {template.usageCount.toLocaleString()} times
+                </p>
+              )}
+
+              <CardItem translateZ="80" className="w-full">
+                <Button 
+                  onClick={onUse}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Use This Template
+                </Button>
+              </CardItem>
+            </CardContent>
+          </CardItem>
+      </Card>
+    </CardBody>
+  </CardContainer>
   );
 }
 
