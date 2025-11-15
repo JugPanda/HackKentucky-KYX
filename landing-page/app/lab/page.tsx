@@ -1040,7 +1040,9 @@ function MadlibLabPageContent() {
             <div className="flex flex-col gap-2">
               <p className="text-lg font-semibold text-white">What&apos;s your game about? ✨</p>
               <p className="text-sm text-slate-400">
-                Describe your game idea - include genre, characters, setting, and mood. The AI will extract details and fill the form!
+                {creationMode === "ai" 
+                  ? "Describe your game idea - include genre, characters, setting, and mood. The AI will extract details and fill the form!"
+                  : "Fill out the details below to customize your game. You can also describe your idea and let AI help fill the form!"}
               </p>
               <Textarea
                 rows={4}
