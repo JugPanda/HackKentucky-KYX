@@ -1,4 +1,5 @@
 // Python/Pygame base templates for all categories
+import { baseShooterCodePython } from './base-shooter-python';
 
 export const baseAdventureCodePython = `import asyncio
 import pygame
@@ -401,12 +402,13 @@ if __name__ == '__main__':
     asyncio.run(main())
 `;
 
-// For the remaining categories, I'll use the JavaScript versions converted to Python
+// For the remaining categories, I'll use similar structures
 // The system will fallback to JavaScript if Python version doesn't exist
 // This ensures all templates work for both languages
 
 export const baseRPGCodePython = baseAdventureCodePython; // Similar structure
 export const baseRacingCodePython = baseAdventureCodePython; // Similar structure  
 export const baseEducationalCodePython = basePuzzleCodePython; // Similar structure
+export { baseShooterCodePython }; // Re-export from base-shooter-python.ts
 export const baseArcadeCodePython = baseShooterCodePython; // Similar structure
 

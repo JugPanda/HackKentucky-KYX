@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Game, SubscriptionTier } from "@/lib/db-types";
 import Link from "next/link";
@@ -56,7 +56,7 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<{ username?: string; subscription_tier?: SubscriptionTier; games_created_this_month?: number } | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     const supabase = createClient();
     
     const { data: { user } } = await supabase.auth.getUser();
@@ -88,11 +88,11 @@ export default function DashboardPage() {
     setGames(gamesData || []);
     setProfile(profileData);
     setLoading(false);
-  };
+  }, [router]);
 
   useEffect(() => {
     loadData();
-  }, [router]);
+  }, [loadData]);
 
   const handleGameDeleted = () => {
     // Reload the games list after deletion
