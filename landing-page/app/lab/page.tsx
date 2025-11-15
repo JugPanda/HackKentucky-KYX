@@ -56,16 +56,16 @@ const genreOptions: Array<{ label: string; value: MadlibPayload["genre"]; blurb:
 
 const labOnboarding = [
   {
-    title: "1. Describe Your Game",
-    detail: "Tell us about your hero, enemies, and the goal",
+    title: "1. Choose Your Language",
+    detail: "Select Python (Pygame) or JavaScript (HTML5 Canvas)",
   },
   {
-    title: "2. Choose the Mood",
-    detail: "Pick a tone and difficulty level that fits your vision",
+    title: "2. Choose Your Path",
+    detail: "Start from a template (instant) or generate with AI (custom)",
   },
   {
-    title: "3. Build & Share",
-    detail: "Create a real playable game you can share with others",
+    title: "3. Create & Build",
+    detail: "Customize your game and build it to share with others",
   },
 ];
 
@@ -1009,7 +1009,9 @@ function MadlibLabPageContent() {
                   ? `Starting with the "${loadedTemplate}" template. Customize it to make it your own!`
                   : remixGameId
                     ? "Take this community game and make your own version with your unique twist!"
-                    : "Describe your game idea and we'll turn it into a playable platformer. Sign in to build and share your game with the community!"}
+                    : creationMode === "ai"
+                      ? "Describe your game idea and AI will generate custom code for you. This takes 1-2 minutes with live progress updates."
+                      : "Customize your game settings, choose your characters, and build a playable game you can share!"}
             </p>
             {(loadedTemplate || remixGameId) && (
               <Link 
