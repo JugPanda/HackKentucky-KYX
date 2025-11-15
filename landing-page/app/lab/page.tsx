@@ -284,7 +284,7 @@ function MadlibLabPageContent() {
     };
     
     checkAuthAndLoadGame();
-  }, [editGameId, templateId, remixGameId, router]);
+  }, [editGameId, templateId, remixGameId, router, languageParam]);
 
 
   const updateField = (key: keyof MadlibPayload, value: string) => {
@@ -827,7 +827,7 @@ function MadlibLabPageContent() {
         )}
 
         {/* Show original creator when mode is selected */}
-        {!shouldShowLanguageSelection && creationMode !== "choose" && creationMode !== null && (
+        {creationMode !== "choose" && creationMode !== null && (
           <>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
