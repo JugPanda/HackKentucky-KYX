@@ -73,3 +73,6 @@ landing-page/.env.local
 *.tmp
 *.temp
 .cache/
+
+# Cursor workspace images
+assets/c__Users_*

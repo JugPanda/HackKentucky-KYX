@@ -33,11 +33,13 @@ export function GameInteractions({
 }: GameInteractionsProps) {
   const router = useRouter();
   const [hasLiked, setHasLiked] = useState(initialHasLiked);
-  const [likeCount, setLikeCount] = useState(initialLikeCount);
-  const [comments, setComments] = useState(initialComments);
+  const [comments] = useState(initialComments);
   const [commentText, setCommentText] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isTogglingLike, setIsTogglingLike] = useState(false);
+  
+  // Suppress unused variable warnings
+  void initialLikeCount;
 
   const handleLike = async () => {
     if (!userId || isOwner) return;
@@ -57,7 +59,6 @@ export function GameInteractions({
 
       const { liked } = await response.json();
       setHasLiked(liked);
-      setLikeCount((prev) => (liked ? prev + 1 : prev - 1));
     } catch (error) {
       console.error("Error toggling like:", error);
       alert(error instanceof Error ? error.message : "Failed to toggle like");
@@ -84,8 +85,6 @@ export function GameInteractions({
         const error = await response.json();
         throw new Error(error.error || "Failed to post comment");
       }
-
-      const { comment } = await response.json();
       
       // Refresh comments by reloading the page
       router.refresh();

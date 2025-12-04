@@ -48,14 +48,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ liked: false });
     } else {
       // Like: create the like
-      const { data: like, error: likeError } = await supabase
+      const { error: likeError } = await supabase
         .from("likes")
         .insert({
           user_id: user.id,
           game_id: gameId,
-        })
-        .select()
-        .single();
+        });
 
       if (likeError) {
         console.error("Error creating like:", likeError);

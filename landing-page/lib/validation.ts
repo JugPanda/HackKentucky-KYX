@@ -71,6 +71,7 @@ export async function safeJsonParse<T>(request: Request, schema: z.ZodSchema<T>)
     
     return { success: true, data: result.data };
   } catch (error) {
+    console.error("JSON parse error:", error);
     return { success: false, error: "Invalid JSON format" };
   }
 }
