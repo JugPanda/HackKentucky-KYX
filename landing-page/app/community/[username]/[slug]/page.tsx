@@ -57,7 +57,7 @@ export default async function GamePage({ params }: PageProps) {
   };
 
   // Check if user can view this game
-  const isOwner = user && game.user_id === user.id;
+  const isOwner = !!(user && game.user_id === user.id);
   const canView = game.visibility === "public" || isOwner;
 
   if (!canView) {
