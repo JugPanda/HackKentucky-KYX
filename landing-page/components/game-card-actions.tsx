@@ -19,7 +19,6 @@ export function GameCardActions({ game, profileUsername, showRemix = false, onDe
   const [isBuilding, setIsBuilding] = useState(game.status === "building");
   const [isPublishing, setIsPublishing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  // const [isResetting, setIsResetting] = useState(false); // Unused - for future feature
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [buildProgress, setBuildProgress] = useState("Starting build...");
@@ -141,32 +140,6 @@ export function GameCardActions({ game, profileUsername, showRemix = false, onDe
       setIsPublishing(false);
     }
   };
-
-  // Unused function - reserved for future "Reset Build" feature
-  // const handleResetBuild = async () => {
-  //   setIsResetting(true);
-  //   setError(null);
-
-  //   try {
-  //     const response = await fetch("/api/games/reset-build", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ gameId: game.id }),
-  //     });
-
-  //     if (!response.ok) {
-  //       const errorData = await response.json();
-  //       throw new Error(errorData.error || "Failed to reset build");
-  //     }
-  //     // Refresh the page to show updated status
-  //     router.refresh();
-  //   } catch (err) {
-  //     setError(err instanceof Error ? err.message : "Failed to reset build");
-  //     console.error("Reset build error:", err);
-  //   } finally {
-  //     setIsResetting(false);
-  //   }
-  // };
 
   const handleDelete = async () => {
     setIsDeleting(true);

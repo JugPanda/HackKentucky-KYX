@@ -29,7 +29,8 @@ export default async function CommunityPage() {
     const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
     games.forEach(game => {
       const profile = profileMap.get(game.user_id);
-      game.profiles = profile ? { username: profile.username, avatar_url: profile.avatar_url } : null;
+      // Ensure we always have a profiles object with username
+      game.profiles = profile ? { username: profile.username, avatar_url: profile.avatar_url } : { username: "Unknown", avatar_url: null };
     });
   }
 

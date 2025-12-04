@@ -1,5 +1,5 @@
 // Database types for TypeScript
-export type GameStatus = "draft" | "building" | "built" | "published" | "failed";
+export type GameStatus = "draft" | "generating" | "building" | "built" | "published" | "failed" | "error";
 export type GameVisibility = "private" | "unlisted" | "public";
 export type BuildQueueStatus = "pending" | "processing" | "completed" | "failed";
 export type ReportStatus = "pending" | "reviewed" | "resolved" | "dismissed";
@@ -30,6 +30,8 @@ export interface Game {
   title: string;
   description?: string;
   config: Record<string, unknown>; // Game configuration JSON
+  generated_code?: string | null; // AI-generated game code
+  language?: string; // Programming language (python or javascript)
   status: GameStatus;
   visibility: GameVisibility;
   bundle_url?: string;

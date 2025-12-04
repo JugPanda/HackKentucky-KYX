@@ -19,6 +19,12 @@ function AnimatedCounter({ value, duration = 1 }: { value: number; duration?: nu
   const [count, setCount] = useState(0);
 
   useEffect(() => {
+    // Handle zero or negative values
+    if (value <= 0) {
+      setCount(0);
+      return;
+    }
+
     let start = 0;
     const end = value;
     const incrementTime = (duration * 1000) / end;
